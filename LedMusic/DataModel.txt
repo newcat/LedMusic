@@ -1,0 +1,8 @@
+﻿Layer:
+	Layer number (0 being topmost -> master layer)
+	Alpha
+	IGenerator:
+		getSample(t)
+		Each generator must have access to the track (track and functions as Singleton)
+		Also each generator must have access to global properties like LedCount etc.
+		Each property must be animatable
