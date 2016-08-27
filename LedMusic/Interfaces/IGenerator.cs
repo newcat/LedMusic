@@ -6,6 +6,7 @@ namespace LedMusic.Interfaces
     {
 
         Color[] getSample(int frameNumber);
+        ObservableCollection<IController> Controllers { get; set; }
 
     }
 }
