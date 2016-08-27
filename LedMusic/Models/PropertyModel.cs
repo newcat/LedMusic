@@ -1,5 +1,8 @@
-﻿namespace LedMusic.Models
+﻿using System;
+
+namespace LedMusic.Models
 {
+    [Serializable]
     class PropertyModel
     {
 

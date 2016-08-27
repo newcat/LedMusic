@@ -6,7 +6,9 @@ namespace LedMusic.Interfaces
     interface IAnimatable
     {
 
+        ObservableCollection<PropertyModel> AnimatableProperties { get; set; }
         ObservableCollection<AnimatedProperty> AnimatedProperties { get; set; }
+        ObservableCollection<IController> Controllers { get; set; }
 
     }
 }

@@ -1,13 +1,11 @@
 ﻿using LedMusic.Models;
-using System.Collections.ObjectModel;
 
 namespace LedMusic.Interfaces
 {
-    interface IGenerator
+    public interface IGenerator
     {
 
         Color[] getSample(int frameNumber);
-        ObservableCollection<IController> Controllers { get; set; }
 
     }
 }

@@ -4,21 +4,58 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LedMusic"
+             xmlns:conv="clr-namespace:LedMusic.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="100" d:DesignWidth="300">
-    <Canvas>
-        <ItemsControl ItemsSource="{Binding Keyframes}">
+
+    <UserControl.Resources>
+        <conv:FrameToCanvasLeftConverter x:Key="FrameToCanvasLeftConverter" />
+        <conv:ValueToCanvasTopConverter x:Key="ValueToCanvasTopConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <TextBlock Background="White" Foreground="Black" Text="{Binding PropertyName}"
+                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+
+        <ItemsControl ItemsSource="{Binding Keyframes}" Grid.Row="1" Background="#66000000">
+
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Rectangle Width="10" Height="10" Stroke="White" Fill="Gray" Canvas.Left="{Binding Time}">
+                    <Rectangle Width="10" Height="10" Stroke="White" Fill="Gray">
                         <Rectangle.RenderTransform>
                             <RotateTransform Angle="45" CenterX="0.5" CenterY="0.5" />
                         </Rectangle.RenderTransform>
                     </Rectangle>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
-            
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Left" Value="{Binding Frame, Converter={StaticResource FrameToCanvasLeftConverter}}">
+                    </Setter>
+                    <Setter Property="Canvas.Top">
+                        <Setter.Value>
+                            <MultiBinding Converter="{StaticResource ValueToCanvasTopConverter}">
+                                <Binding Path="Value" />
+                                <Binding Path="DataContext.MinValue" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}" />
+                                <Binding Path="DataContext.MaxValue" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}" />
+                            </MultiBinding>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ItemsControl.ItemContainerStyle>
         </ItemsControl>
-    </Canvas>
+
+    </Grid>
+
 </UserControl>

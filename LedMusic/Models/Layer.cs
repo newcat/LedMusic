@@ -1,14 +1,15 @@
 ﻿using LedMusic.Interfaces;
+using LedMusic.StaticStuff;
 using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace LedMusic.Models
 {
-    class Layer : INotifyPropertyChanged, IComparable<Layer>
+    [Serializable()]
+    public class Layer : INotifyPropertyChanged, IComparable<Layer>
     {
+        [field:NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] string name = "")
         {
@@ -54,17 +55,6 @@ namespace LedMusic.Models
             }
         }
 
-        public ObservableCollection<PropertyModel> _generatorProperties;
-        public ObservableCollection<PropertyModel> GeneratorProperties
-        {
-            get { return _generatorProperties; }
-            set
-            {
-                _generatorProperties = value;
-                NotifyPropertyChanged();
-            }
-        }
-
         private LayerColorMode _colorMode = LayerColorMode.OVERLAY;
         public LayerColorMode ColorMode
         {
@@ -84,40 +74,29 @@ namespace LedMusic.Models
         public Layer(int layerNumber, IGenerator generator)
         {
             LayerNumber = layerNumber;
-            Generator = generator;
-            updateGenProperties();
+            IAnimatable a = (IAnimatable)generator;
+            PropertiesHelper.updateAnimatableProperties(ref a);
+            Generator = (IGenerator)a;
         }
 
-        public void updateGenProperties()
-        {
-            ObservableCollection<PropertyModel> returnList = new ObservableCollection<PropertyModel>();
+        #region Serialization
+        //public Layer(SerializationInfo info, StreamingContext context) {
+        //    LayerNumber = info.GetInt32("LayerNumber");
+        //    _layerName = info.GetString("LayerName"); //TODO
+        //    Alpha = info.GetDouble("Alpha");
+        //    Generator = (IGenerator)info.GetValue("Generator", typeof(IGenerator));
+        //    ColorMode = (LayerColorMode)info.GetValue("ColorMode", typeof(LayerColorMode));
+        //}
 
-            foreach (PropertyInfo pi in Generator.GetType().GetProperties())
-            {
-                foreach (Attribute a in pi.GetCustomAttributes())
-                {
-                    if (a is AnimatableAttribute)
-                    {
-                        AnimatableAttribute aa = (AnimatableAttribute)a;
-                        double minValue;
-                        double maxValue;
-                        if (aa.UpdateAtRuntime)
-                        {
-                            minValue = Convert.ToDouble(Generator.GetType().GetProperty(pi.Name + "_MinValue").GetValue(Generator));
-                            maxValue = Convert.ToDouble(Generator.GetType().GetProperty(pi.Name + "_MaxValue").GetValue(Generator));
-                        } else
-                        {
-                            minValue = aa.MinValue;
-                            maxValue = aa.MaxValue;
-                        }
-                        returnList.Add(new PropertyModel(pi.Name, minValue, maxValue, Convert.ToDouble(pi.GetValue(Generator))));
-                    }
-                }
-            }
-
-            GeneratorProperties = returnList;
-
-        }
+        //public void GetObjectData(SerializationInfo info, StreamingContext context)
+        //{
+        //    info.AddValue("LayerNumber", LayerNumber);
+        //    info.AddValue("LayerName", LayerName);
+        //    info.AddValue("Alpha", Alpha);
+        //    info.AddValue("Generator", Generator, Generator.GetType());
+        //    info.AddValue("ColorMode", ColorMode);
+        //}
+        #endregion
 
     }
 }

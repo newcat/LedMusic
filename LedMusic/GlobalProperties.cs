@@ -61,6 +61,8 @@ namespace LedMusic
             }
         }
 
+        public string CurrentProjectFile { get; set; }
+
         #region Constructor
         private static GlobalProperties instance;
 

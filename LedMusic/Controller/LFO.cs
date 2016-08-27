@@ -1,14 +1,16 @@
 ﻿using LedMusic.Interfaces;
 using LedMusic.Models;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace LedMusic.Controller
 {
+    [Serializable()]
     class LFO : INotifyPropertyChanged, IAnimatable, IController
     {
-
+        [field: NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] string name = "")
         {
@@ -115,6 +117,28 @@ namespace LedMusic.Controller
 
         public ObservableCollection<AnimatedProperty> AnimatedProperties { get; set; }
 
+        private ObservableCollection<PropertyModel> _animatableProperties = new ObservableCollection<PropertyModel>();
+        public ObservableCollection<PropertyModel> AnimatableProperties
+        {
+            get { return _animatableProperties; }
+            set
+            {
+                _animatableProperties = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private ObservableCollection<IController> _controllers = new ObservableCollection<IController>();
+        public ObservableCollection<IController> Controllers
+        {
+            get { return _controllers; }
+            set
+            {
+                _controllers = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         private double minValue;
         private double maxValue;
 
@@ -123,6 +147,8 @@ namespace LedMusic.Controller
             AnimatedProperties = new ObservableCollection<AnimatedProperty>();
             PropertyName = propertyName;
         }
+
+        public LFO() { }
 
         public double getValueAt(int frameNumber)
         {

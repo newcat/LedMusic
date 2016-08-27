@@ -1,12 +1,15 @@
-﻿using System;
+﻿using LedMusic.Viewmodels;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace LedMusic.Models
 {
+    [Serializable()]
     class Keyframe : IComparable<Keyframe>, IEquatable<Keyframe>, INotifyPropertyChanged
     {
 
+        [field:NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] string name = "")
         {
@@ -49,6 +52,16 @@ namespace LedMusic.Models
         {
             Frame = frame;
             Value = value;
+
+            MainModel.Instance.PropertyChanged += MainModel_PropertyChanged;
+        }
+
+        private void MainModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "TrackWidth")
+            {
+                NotifyPropertyChanged("Frame");
+            }
         }
     }
 }

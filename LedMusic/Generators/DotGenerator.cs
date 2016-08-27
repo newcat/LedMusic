@@ -7,9 +7,10 @@ using System.Runtime.CompilerServices;
 
 namespace LedMusic.Generators
 {
+    [Serializable()]
     class DotGenerator : IGenerator, IAnimatable, INotifyPropertyChanged
     {
-
+        [field: NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] string name = "")
         {
@@ -92,6 +93,7 @@ namespace LedMusic.Generators
         public int Glow_MinValue { get { return 0; } }
         public int Glow_MaxValue { get { return GlobalProperties.Instance.LedCount; } }
 
+        public ObservableCollection<PropertyModel> AnimatableProperties { get; set; }
         public ObservableCollection<AnimatedProperty> AnimatedProperties { get; set; }
         public ObservableCollection<IController> Controllers { get; set; }
 
@@ -99,6 +101,7 @@ namespace LedMusic.Generators
         {
             AnimatedProperties = new ObservableCollection<AnimatedProperty>();
             Controllers = new ObservableCollection<IController>();
+            AnimatableProperties = new ObservableCollection<PropertyModel>();
         }
 
         public Color[] getSample(int frame)

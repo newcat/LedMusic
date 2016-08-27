@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LedMusic.Interfaces;
+﻿using LedMusic.Interfaces;
 using LedMusic.Models;
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Input;
 using System.Windows.Media;
-using Microsoft.Win32;
 
 namespace LedMusic.Viewmodels
 {
@@ -44,6 +44,17 @@ namespace LedMusic.Viewmodels
             set
             {
                 _currentLayer = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private IAnimatable _currentIAnimatable;
+        public IAnimatable CurrentAnimatable
+        {
+            get { return _currentIAnimatable; }
+            set
+            {
+                _currentIAnimatable = value;
                 NotifyPropertyChanged();
             }
         }
@@ -244,6 +255,82 @@ namespace LedMusic.Viewmodels
             AvailableGenerators = generatorNames;
         }
 
+        public void ChangeAnimatableParameter(double value, string propertyName)
+        {
+
+            if (isPropertyAnimated(propertyName, CurrentAnimatable.AnimatedProperties))
+            {
+                AnimatedProperty ap;
+                getAnimatedPropertyReference(propertyName, CurrentAnimatable.AnimatedProperties, out ap);
+                if (ap == null)
+                    return;
+
+                Keyframe kf;
+                if (containsKeyframe(CurrentFrame, ap.Keyframes, out kf))
+                {
+                    kf.Value = value;
+                }
+                else
+                {
+                    ap.Keyframes.Add(new Keyframe(CurrentFrame, value));
+                }
+            }
+            else
+            {
+                PropertyInfo pi = CurrentAnimatable.GetType().GetProperty(propertyName);
+                if (pi == null)
+                    return;
+
+                if (pi.PropertyType == typeof(int))
+                {
+                    pi.SetValue(CurrentAnimatable, (int)value);
+                }
+                else if (pi.PropertyType == typeof(double))
+                {
+                    pi.SetValue(CurrentAnimatable, value);
+                }
+                else if (pi.PropertyType == typeof(bool))
+                {
+                    pi.SetValue(CurrentAnimatable, value > 0.5 ? true : false);
+                }
+            }
+
+        }
+
+        private bool isPropertyAnimated(string propertyName, IEnumerable<AnimatedProperty> animatedProperties)
+        {
+
+            if (animatedProperties == null)
+                return false;
+
+            foreach (AnimatedProperty ap in animatedProperties)
+            {
+                if (ap.PropertyName == propertyName)
+                    return true;
+            }
+            return false;
+        }
+
+        private void getAnimatedPropertyReference(string propertyName, IEnumerable<AnimatedProperty> animatedProperties, out AnimatedProperty ap)
+        {
+
+            if (animatedProperties == null)
+            {
+                ap = null;
+                return;
+            }
+
+            foreach (AnimatedProperty _ap in animatedProperties)
+            {
+                if (_ap.PropertyName == propertyName)
+                {
+                    ap = _ap;
+                    return;
+                }
+            }
+            ap = null;
+        }
+
         #region Mixdown and Rendering
         public void updatePreviewStrip()
         {
@@ -286,7 +373,7 @@ namespace LedMusic.Viewmodels
                 IAnimatable a = (IAnimatable)g;
                 applyKeyframes(ref a, frame);
 
-                foreach (IController con in g.Controllers)
+                foreach (IController con in a.Controllers)
                 {
                     IAnimatable aCon = (IAnimatable)con;
                     if (aCon != null)
@@ -328,6 +415,16 @@ namespace LedMusic.Viewmodels
         {
             foreach (AnimatedProperty ap in a.AnimatedProperties)
             {
+
+                for (int i = 0; i < a.Controllers.Count; i++)
+                {
+                    if (a.Controllers[i] is IAnimatable)
+                    {
+                        IAnimatable c = (IAnimatable)a.Controllers[i];
+                        applyKeyframes(ref c, frame);
+                        a.Controllers[i] = (IController)c;
+                    }
+                }
 
                 Keyframe k = getKeyframeAt(frame, ap.Keyframes);
 
@@ -425,76 +522,6 @@ namespace LedMusic.Viewmodels
             return closestKeyframe;
         }
 
-        public void ChangeGeneratorParameter(double value, string propertyName)
-        {
-
-            if (isPropertyAnimated(propertyName, ((IAnimatable)CurrentLayer.Generator).AnimatedProperties))
-            {
-                IAnimatable a = (IAnimatable)CurrentLayer.Generator;
-                AnimatedProperty ap;
-                getAnimatedPropertyReference(propertyName, a.AnimatedProperties, out ap);
-                if (ap == null)
-                    return;
-
-                Keyframe kf;
-                if (containsKeyframe(CurrentFrame, ap.Keyframes, out kf))
-                {
-                    kf.Value = value;
-                } else
-                {
-                    ap.Keyframes.Add(new Keyframe(CurrentFrame, value));
-                }
-            } else
-            {
-                PropertyInfo pi = CurrentLayer.Generator.GetType().GetProperty(propertyName);
-                if (pi == null)
-                    return;
-
-                if (pi.PropertyType == typeof(int))
-                {
-                    pi.SetValue(CurrentLayer.Generator, (int)value);
-                } else if (pi.PropertyType == typeof(double))
-                {
-                    pi.SetValue(CurrentLayer.Generator, value);
-                }
-            }
-
-        }
-
-        private bool isPropertyAnimated(string propertyName, IEnumerable<AnimatedProperty> animatedProperties)
-        {
-
-            if (animatedProperties == null)
-                return false;
-
-            foreach (AnimatedProperty ap in animatedProperties)
-            {
-                if (ap.PropertyName == propertyName)
-                    return true;
-            }
-            return false;
-        }
-
-        private void getAnimatedPropertyReference(string propertyName, IEnumerable<AnimatedProperty> animatedProperties, out AnimatedProperty ap)
-        {
-
-            if (animatedProperties == null)
-            {
-                ap = null;
-                return;
-            }
-
-            foreach (AnimatedProperty _ap in animatedProperties)
-            {
-                if (_ap.PropertyName == propertyName)
-                {
-                    ap = _ap;
-                    return;
-                }
-            }
-            ap = null;
-        }
-
         private bool containsKeyframe(int frame, IEnumerable<Keyframe> keyframes, out Keyframe k)
         {
             foreach (Keyframe kf in keyframes)
@@ -521,7 +548,20 @@ namespace LedMusic.Viewmodels
             double value = Convert.ToDouble(pi.GetValue(CurrentLayer.Generator));
 
             IAnimatable gen = (IAnimatable)(CurrentLayer.Generator);
-            gen.AnimatedProperties.Add(new AnimatedProperty(propertyName, new Keyframe(CurrentFrame, value)));
+
+            double minValue = 0;
+            double maxValue = 0;
+
+            foreach (PropertyModel pm in gen.AnimatableProperties)
+            {
+                if (pm.Name == propertyName)
+                {
+                    minValue = pm.MinValue;
+                    maxValue = pm.MaxValue;
+                }
+            }
+
+            gen.AnimatedProperties.Add(new AnimatedProperty(propertyName, new Keyframe(CurrentFrame, value), minValue, maxValue));
 
         }
 
@@ -558,6 +598,71 @@ namespace LedMusic.Viewmodels
                     }
                 }
             }
+        }
+        #endregion
+
+        #region Saving/Loading stuff
+        public void Save()
+        {
+
+            if (GlobalProperties.Instance.CurrentProjectFile == null ||
+                GlobalProperties.Instance.CurrentProjectFile == "")
+                SaveAs();
+
+            List<Layer> layersList = new List<Layer>(_layers);
+            FileStream fs = new FileStream(GlobalProperties.Instance.CurrentProjectFile, FileMode.Create);
+
+            Savefile s = new Savefile(layersList);
+            IFormatter f = new BinaryFormatter();
+            f.Serialize(fs, s);
+            fs.Close();
+
+        }
+
+        public void SaveAs()
+        {
+
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.CheckFileExists = false;
+            sfd.CheckPathExists = true;
+            sfd.AddExtension = true;
+            sfd.DefaultExt = ".lmp";
+
+            if (sfd.ShowDialog() == true)
+            {
+                GlobalProperties.Instance.CurrentProjectFile = sfd.FileName;
+                Save();
+            }
+
+
+        }
+
+        public void Open()
+        {
+
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.CheckFileExists = true;
+            ofd.Filter = "LedMusic project files (*.lmp)|*.lmp";
+
+            if (ofd.ShowDialog() == true)
+            {
+                Stream fs = ofd.OpenFile();
+                IFormatter f = new BinaryFormatter();
+                Savefile s = (Savefile)f.Deserialize(fs);
+                fs.Close();
+
+                GlobalProperties.Instance.CurrentProjectFile = ofd.FileName;
+                GlobalProperties.Instance.LedCount = s.ledCount;
+                GlobalProperties.Instance.BPM = s.bpm;
+                GlobalProperties.Instance.BeatOffset = s.beatOffset;
+                GlobalProperties.Instance.FPS = s.fps;
+
+                BassEngine.Instance.OpenFile(s.musicFile);
+
+                Layers = new ObservableCollection<Layer>(s.layers);
+
+            }
+
         }
         #endregion
 

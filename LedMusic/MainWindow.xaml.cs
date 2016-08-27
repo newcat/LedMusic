@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using LedMusic.Interfaces;
+using LedMusic.Models;
+using LedMusic.StaticStuff;
+using LedMusic.Viewmodels;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using LedMusic.Viewmodels;
-using LedMusic.Models;
 
 namespace LedMusic
 {
@@ -22,6 +13,7 @@ namespace LedMusic
     /// </summary>
     public partial class MainWindow : Window
     {
+
         public MainWindow()
         {
             InitializeComponent();
@@ -76,13 +68,34 @@ namespace LedMusic
 
         private void sliderValue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            MainModel.Instance.ChangeGeneratorParameter(e.NewValue, ((PropertyModel)(((Slider)sender).DataContext)).Name);
+            MainModel.Instance.ChangeAnimatableParameter(e.NewValue, ((PropertyModel)(((Slider)sender).DataContext)).Name);
             MainModel.Instance.updatePreviewStrip();
         }
 
         private void lvLayers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ((Layer)lvLayers.SelectedItem).updateGenProperties();
+            IAnimatable a = (IAnimatable)(((Layer)lvLayers.SelectedItem).Generator);
+            PropertiesHelper.updateAnimatableProperties(ref a);
+            MainModel.Instance.CurrentAnimatable = a;
+        }
+
+        private void CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (e.Command == ApplicationCommands.Save)
+            {
+                MainModel.Instance.Save();
+            } else if (e.Command == ApplicationCommands.SaveAs)
+            {
+                MainModel.Instance.SaveAs();
+            } else if (e.Command == ApplicationCommands.Open)
+            {
+                MainModel.Instance.Open();
+            }
+        }
+
+        private void CommandBinding_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
         }
     }
 }

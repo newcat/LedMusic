@@ -11,9 +11,10 @@ using System.Threading.Tasks;
 
 namespace LedMusic.Generators
 {
+    [Serializable()]
     class ExplosionGenerator : INotifyPropertyChanged, IAnimatable, IGenerator
     {
-
+        [field: NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] string name = "")
         {
@@ -38,6 +39,17 @@ namespace LedMusic.Generators
             set
             {
                 _controllers = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private ObservableCollection<PropertyModel> _animatableProperties = new ObservableCollection<PropertyModel>();
+        public ObservableCollection<PropertyModel> AnimatableProperties
+        {
+            get { return _animatableProperties; }
+            set
+            {
+                _animatableProperties = value;
                 NotifyPropertyChanged();
             }
         }

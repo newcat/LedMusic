@@ -67,10 +67,9 @@
       <DependentUpon>ChooseGeneratorWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controller\PeakController.cs" />
-    <Compile Include="Controller\PeakControllerConfigWindow.xaml.cs">
-      <DependentUpon>PeakControllerConfigWindow.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Converters\FrameToCanvasLeftConverter.cs" />
     <Compile Include="Converters\OffsetRectConverter.cs" />
+    <Compile Include="Converters\ValueToCanvasTopConverter.cs" />
     <Compile Include="Converters\WidthToRectConverter.cs" />
     <Compile Include="Generators\DotGenerator.cs" />
     <Compile Include="Generators\ExplosionGenerator.cs" />
@@ -81,9 +80,6 @@
     <Compile Include="KeyframeTrack.xaml.cs">
       <DependentUpon>KeyframeTrack.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controller\LFOConfigWindow.xaml.cs">
-      <DependentUpon>LFOConfigWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Models\AnimatedProperty.cs" />
     <Compile Include="Models\Enums.cs" />
     <Compile Include="Models\Keyframe.cs" />
@@ -91,21 +87,15 @@
     <Compile Include="Models\PropertyModel.cs" />
     <Compile Include="Helpers\NotifyPropertyChanged.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
+    <Compile Include="Models\Savefile.cs" />
     <Compile Include="StaticStuff\Extensions.cs" />
+    <Compile Include="StaticStuff\PropertiesHelper.cs" />
     <Compile Include="Viewmodels\MainModel.cs" />
     <Page Include="ChooseGeneratorWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controller\PeakControllerConfigWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="KeyframeTrack.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controller\LFOConfigWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
