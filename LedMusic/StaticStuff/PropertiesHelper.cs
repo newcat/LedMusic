@@ -33,7 +33,7 @@ namespace LedMusic.StaticStuff
                             minValue = aa.MinValue;
                             maxValue = aa.MaxValue;
                         }
-                        returnList.Add(new PropertyModel(pi.Name, minValue, maxValue, Convert.ToDouble(pi.GetValue(a))));
+                        returnList.Add(new PropertyModel(pi.Name, minValue, maxValue, Convert.ToDouble(pi.GetValue(a)), aa.Logarithmic));
                     }
                 }
             }

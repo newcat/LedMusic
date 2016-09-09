@@ -17,10 +17,12 @@ namespace LedMusic
 
         public static ColorRGB Overlay(this ColorRGB a, ColorRGB b)
         {
-            byte red = Convert.ToByte(a.A * a.R + (1 - a.A) * b.R);
-            byte green = Convert.ToByte(a.A * a.G + (1 - a.A) * b.G);
-            byte blue = Convert.ToByte(a.A * a.B + (1 - a.A) * b.B);
-            return new ColorRGB(1, red, green, blue);
+            double alphaA = a.getColorHSV().V;
+            double alphaB = a.getColorHSV().V;
+            byte red = Convert.ToByte(alphaA * a.R + (1 - alphaA) * b.R);
+            byte green = Convert.ToByte(alphaA * a.G + (1 - alphaA) * b.G);
+            byte blue = Convert.ToByte(alphaA * a.B + (1 - alphaA) * b.B);
+            return new ColorRGB(red, green, blue);
             //double alpha = a.A + (1 - a.A) * b.A;
             //byte red = Convert.ToByte((1 / alpha) * (a.A * a.R + (1 - a.A) * b.A * b.R));
             //byte green = Convert.ToByte((1 / alpha) * (a.A * a.G + (1 - a.A) * b.A * b.G));
@@ -28,9 +30,15 @@ namespace LedMusic
             //return new ColorRGB(alpha, red, green, blue);
         }
 
-        //public static ColorRGB Add(this ColorRGB a, ColorRGB b)
-        //{
-        //    byte red = Convert
-        //}
+        public static ColorHSV Add(this ColorHSV a, ColorHSV b)
+        {
+            ColorRGB aRGB = a.getColorRGB();
+            ColorRGB bRGB = b.getColorRGB();
+            byte red = Convert.ToByte(Math.Min(aRGB.R + bRGB.R, 255));
+            byte green = Convert.ToByte(Math.Min(aRGB.G + bRGB.G, 255));
+            byte blue = Convert.ToByte(Math.Min(aRGB.B + bRGB.B, 255));
+            return new ColorRGB(red, green, blue).getColorHSV();
+        }
+
     }
 }

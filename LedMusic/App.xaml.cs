@@ -20,11 +20,6 @@ namespace LedMusic
             mw.DataContext = model;
             mw.Show();
 
-            model.Layers.Add(new Layer(0, new DotGenerator()));
-            model.Layers.Add(new Layer(1, new DotGenerator()));
-            model.Layers.Add(new Layer(2, new DotGenerator()));
-            model.Layers.Sort();
-
         }
     }
 }

@@ -61,35 +61,87 @@ namespace LedMusic.Controller
             }
         }
 
-        private double _sensitivity;
+        private double _amplitude;
         [Animatable(0,1)]
-        public double Sensitivity
+        public double Amplitude
         {
-            get { return _sensitivity; }
+            get { return _amplitude; }
             set
             {
-                _sensitivity = value;
+                _amplitude = value;
                 NotifyPropertyChanged();
             }
         }
 
+        private double _lowerThreshold;
+        [Animatable(0, 1)]
+        public double LowerThreshold
+        {
+            get { return _lowerThreshold; }
+            set
+            {
+                _lowerThreshold = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private double _upperThreshold;
+        [Animatable(0, 1)]
+        public double UpperThreshold
+        {
+            get { return _upperThreshold; }
+            set
+            {
+                _upperThreshold = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public Guid _id = Guid.NewGuid();
+        public Guid Id { get { return _id; } }
+
         private double maxValue;
         private double minValue;
 
-        public PeakController(string propertyName, double minValue, double maxValue)
+        public PeakController()
+        {
+            
+        }
+
+        public void initialize(string propertyName, double minValue, double maxValue)
         {
             PropertyName = propertyName;
             this.maxValue = maxValue;
             this.minValue = minValue;
         }
 
-        public PeakController() { }
-
         public double getValueAt(int frameNumber)
         {
             int fps = GlobalProperties.Instance.FPS;
             float[] levels = BassEngine.Instance.getLevelAt(frameNumber / (double)fps, 1.0 / fps);
-            return Sensitivity * (maxValue - minValue) * ((levels[0] + levels[1]) / 2.0) + minValue;
+            double avgLevel = (levels[0] + levels[1]) / 2.0;
+            double returnValue;
+
+            if (avgLevel > UpperThreshold)
+            {
+                returnValue = Amplitude * maxValue;
+            } else if (avgLevel < LowerThreshold)
+            {
+                returnValue = minValue;
+            } else
+            {
+                returnValue = Amplitude * (maxValue - minValue) * ((avgLevel - LowerThreshold) / (UpperThreshold - LowerThreshold)) + minValue;
+            }
+
+            if (returnValue > maxValue)
+                return maxValue;
+            else if (returnValue < minValue)
+                return minValue;
+            else if (double.IsNaN(returnValue))
+                return minValue;
+            else
+                return returnValue;
+
         }
 
     }

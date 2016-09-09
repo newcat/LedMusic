@@ -9,7 +9,7 @@
         xmlns:vm="clr-namespace:LedMusic.Viewmodels"
         xmlns:model="clr-namespace:LedMusic.Models"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="1000" MinWidth="865" MinHeight="700" Loaded="Window_Loaded">
+        Title="MainWindow" Height="700" Width="1000" MinWidth="865" MinHeight="700" Loaded="Window_Loaded" >
 
     <Window.Resources>
         <LinearGradientBrush x:Key="WaveformBrush" EndPoint="1,1" StartPoint="1,0">
@@ -63,11 +63,11 @@
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="LED Count" VerticalAlignment="Top" Grid.Column="0"/>
-                    <Slider x:Name="sliderLedCount" Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="150" Minimum="1" Maximum="200" SmallChange="1" Value="{Binding Path=LedCount, Mode=TwoWay}" IsSnapToTickEnabled="True"/>
+                    <Slider x:Name="sliderLedCount" Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="150" Minimum="1" Maximum="200" SmallChange="1" Value="{Binding Path=LedCount, Mode=TwoWay}" IsSnapToTickEnabled="True" />
                     <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="{Binding ElementName=sliderLedCount, Path=Value}" VerticalAlignment="Top"/>
 
                     <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" TextWrapping="Wrap" Text="FPS" VerticalAlignment="Top"/>
-                    <Slider x:Name="sliderFPS" Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="150" Minimum="10" Maximum="60" SmallChange="0" Value="{Binding Path=FPS, Mode=TwoWay}" IsSnapToTickEnabled="True"/>
+                    <Slider x:Name="sliderFPS" Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="150" Minimum="10" Maximum="60" SmallChange="0" Value="{Binding Path=FPS, Mode=TwoWay}" IsSnapToTickEnabled="True" />
                     <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" TextWrapping="Wrap" Text="{Binding ElementName=sliderFPS, Path=Value}" VerticalAlignment="Top"/>
 
                     <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" TextWrapping="Wrap" Text="BPM" VerticalAlignment="Top"/>
@@ -78,13 +78,15 @@
                     <Slider x:Name="sliderBeatOffset" Grid.Column="1" Grid.Row="3" Margin="10,10,10,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Minimum="0" Maximum="4" Value="{Binding Path=BeatOffset, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True" />
                     <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" TextWrapping="Wrap" Text="{Binding ElementName=sliderBeatOffset, Path=Value}" VerticalAlignment="Top"/>
 
+                    <Canvas Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Background="{Binding BeatIndicatorBackground}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5" />
                 </Grid>
             </GroupBox>
 
-            <ScrollViewer x:Name="scrollViewer" Margin="212,10,10,10" Grid.Row="2" Grid.ColumnSpan="2"
-                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <ScrollViewer x:Name="scrollViewer" Margin="212,10,10,10" Grid.Row="2" Grid.ColumnSpan="2" KeyDown="canvas_KeyDown" Focusable="True"
+                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ScrollChanged="scrollViewer_ScrollChanged">
                 
                 <Canvas x:Name="canvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="{Binding TrackWidth}"
+                        MouseLeftButtonDown="canvas_MouseLeftButtonDown"
                         Height="{Binding ElementName=canvasGrid, Path=ActualHeight, Mode=OneWay}">
                     
                     <Canvas.Background>
@@ -152,10 +154,10 @@
             </ScrollViewer>
 
 
-            <Button x:Name="btnOpen" Content="Open music" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Height="20" Command="{Binding CmdOpenMusicFile}"/>
-            <Button x:Name="btnPlay" Content="Play" HorizontalAlignment="Left" Margin="90,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Height="20" Command="{Binding CmdPlay}"/>
-            <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Margin="170,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdPause}"/>
-            <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="250,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdStop}"/>
+            <Button x:Name="btnOpen" Content="Open music" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Height="20" Command="{Binding CmdOpenMusicFile}" Focusable="False"/>
+            <Button x:Name="btnPlay" Content="Play" HorizontalAlignment="Left" Margin="90,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Height="20" Command="{Binding CmdPlay}" Focusable="False"/>
+            <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Margin="170,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdPause}" Focusable="False"/>
+            <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="250,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdStop}" Focusable="False"/>
 
 
             <Canvas x:Name="previewStrip" Height="20" Margin="10,10,10,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
@@ -171,6 +173,15 @@
                         <TextBlock Text="{Binding LayerName}" />
                     </DataTemplate>
                 </ListView.ItemTemplate>
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Add Layer" Command="{Binding CmdAddLayer}" />
+                        <MenuItem Header="Remove Layer" Command="{Binding CmdRemoveLayer}" />
+                        <MenuItem Header="Rename Layer" Command="{Binding CmdRenameLayer}" />
+                        <MenuItem Header="Move Layer Up" Command="{Binding CmdMoveLayerUp}" />
+                        <MenuItem Header="Move Layer Down" Command="{Binding CmdMoveLayerDown}" />
+                    </ContextMenu>
+                </ListView.ContextMenu>
             </ListView>
 
             <ListView x:Name="lvGeneratorSettigns" Grid.Column="1" Height="180" Margin="10,10,10,0" VerticalAlignment="Top" ItemsSource="{Binding CurrentAnimatable.AnimatableProperties}">
@@ -201,7 +212,12 @@
                                             <ContextMenu>
                                                 <MenuItem Header="Animate" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdAnimate}"
                                                           CommandParameter="{Binding Name}"/>
-                                                <MenuItem Header="Edit LFO" />
+                                                <MenuItem Header="Remove Animation" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdRemoveAnimation}"
+                                                          CommandParameter="{Binding Name}"/>
+                                                <MenuItem Header="Edit Controller" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdEditController}"
+                                                          CommandParameter="{Binding Name}"/>
+                                                <MenuItem Header="Remove Controller" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdRemoveController}"
+                                                          CommandParameter="{Binding Name}"/>
                                             </ContextMenu>
                                         </Grid.ContextMenu>
                                     </Grid>
@@ -213,13 +229,14 @@
 
             </ListView>
 
-            <GroupBox x:Name="groupBox1" Header="Layer Settings" HorizontalAlignment="Left" Margin="10,0,0,11" Grid.Row="2" VerticalAlignment="Bottom" Height="184" Width="197">
+            <GroupBox Header="Layer Settings" HorizontalAlignment="Left" Margin="10,0,0,11" Grid.Row="2" VerticalAlignment="Bottom" Height="184" Width="197">
                 <Grid HorizontalAlignment="Stretch" Margin="0" VerticalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition />
+                        <ColumnDefinition Width="5*"/>
+                        <ColumnDefinition Width="9*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
+                        <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
@@ -227,22 +244,26 @@
 
                     <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Generator" VerticalAlignment="Top"
                                Grid.Column="0" Grid.Row="0"/>
-                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Explosion" VerticalAlignment="Top"
+                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="{Binding Path=CurrentLayer.Generator.GeneratorName}" VerticalAlignment="Top"
                                Grid.Column="1" Grid.Row="0"/>
                     <Button x:Name="btnChooseGenerator" Margin="10,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="20"
-                        Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Content="Choose Generator" Command="{Binding CmdChooseGenerator}"/>
+                        Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Content="Choose Generator" Command="{Binding CmdChooseGenerator}" Focusable="False"/>
 
                     <ComboBox HorizontalAlignment="Stretch" Margin="10,10,10,0" VerticalAlignment="Top" Height="20"
                               Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" SelectedIndex="0"
                               ItemsSource="{Binding Source={local:Enumeration {x:Type model:LayerColorMode}}}"
-                              DisplayMemberPath="Description" SelectedValue="{Binding ColorMode, Mode=TwoWay}"
-                              SelectedValuePath="Value"/>
+                              DisplayMemberPath="Description" SelectedValue="{Binding Path=CurrentLayer.ColorMode, Mode=TwoWay}"
+                              SelectedValuePath="Value" Focusable="False" SelectionChanged="ComboBox_SelectionChanged"/>
+
+                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" Text="Alpha" VerticalAlignment="Top" Grid.Column="0" Grid.Row="3" />
+                    <Slider x:Name="sliderLayerAlpha" Orientation="Horizontal" Margin="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            Grid.Column="1" Grid.Row="3" Minimum="0" Maximum="1" Value="{Binding Path=CurrentLayer.Alpha, Mode=TwoWay}" ValueChanged="sliderLayerAlpha_ValueChanged"/>
 
                 </Grid>
             </GroupBox>
 
-            <Button x:Name="btnDecreaseZoom" Content="-" Grid.Column="1" Margin="0,10,10,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnDecreaseZoom_Click" HorizontalAlignment="Right" Width="20"/>
-            <Button x:Name="btnIncreaseZoom" Content="+" Grid.Column="1" Margin="0,10,35,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnIncreaseZoom_Click" HorizontalAlignment="Right" Width="20"/>
+            <Button x:Name="btnDecreaseZoom" Content="-" Grid.Column="1" Margin="0,10,10,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnDecreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
+            <Button x:Name="btnIncreaseZoom" Content="+" Grid.Column="1" Margin="0,10,35,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnIncreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
             <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" TextWrapping="Wrap" Text="{Binding CurrentFrame}" VerticalAlignment="Top" />
 
         </Grid>

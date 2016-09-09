@@ -6,26 +6,22 @@ namespace LedMusic
     class AnimatableAttribute : Attribute
     {
 
+        public bool Logarithmic { get; private set; }
         public bool UpdateAtRuntime { get; private set; }
         public double MinValue { get; private set; }
         public double MaxValue { get; private set; }
 
-        public AnimatableAttribute(double minValue, double maxValue)
+        public AnimatableAttribute(double minValue, double maxValue, bool log = false)
         {
             MinValue = minValue;
             MaxValue = maxValue;
             UpdateAtRuntime = false;
+            Logarithmic = log;
         }
 
-        public AnimatableAttribute(int minValue, int maxValue)
+        public AnimatableAttribute(bool log = false)
         {
-            MinValue = minValue;
-            MaxValue = maxValue;
-            UpdateAtRuntime = false;
-        }
-
-        public AnimatableAttribute()
-        {
+            Logarithmic = log;
             UpdateAtRuntime = true;
         }
 

@@ -14,8 +14,13 @@ namespace LedMusic.Models
         ADD
     }
 
-    public enum Waveforms
+    public enum Waveform
     {
         SINE, SQUARE, TRIANGLE, SAWTOOTH
+    }
+
+    public enum KeyframeMode
+    {
+        LINEAR, HOLD
     }
 }

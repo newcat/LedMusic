@@ -54,6 +54,11 @@ namespace LedMusic.Generators
             }
         }
 
+        public string GeneratorName { get { return "Explosion"; } }
+
+        public Guid _id = Guid.NewGuid();
+        public Guid Id { get { return _id; } }
+
         private List<Particle> particles = new List<Particle>();
 
         public ExplosionGenerator()

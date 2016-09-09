@@ -30,7 +30,12 @@ namespace LedMusic.Models
         private string _layerName;
         public string LayerName
         {
-            get { return "Layer " + LayerNumber.ToString(); }
+            get { return _layerName; }
+            set
+            {
+                _layerName = value;
+                NotifyPropertyChanged();
+            }
         }
 
         private double _alpha = 1;
@@ -74,29 +79,11 @@ namespace LedMusic.Models
         public Layer(int layerNumber, IGenerator generator)
         {
             LayerNumber = layerNumber;
+            LayerName = "Layer " + LayerNumber.ToString();
             IAnimatable a = (IAnimatable)generator;
             PropertiesHelper.updateAnimatableProperties(ref a);
             Generator = (IGenerator)a;
         }
-
-        #region Serialization
-        //public Layer(SerializationInfo info, StreamingContext context) {
-        //    LayerNumber = info.GetInt32("LayerNumber");
-        //    _layerName = info.GetString("LayerName"); //TODO
-        //    Alpha = info.GetDouble("Alpha");
-        //    Generator = (IGenerator)info.GetValue("Generator", typeof(IGenerator));
-        //    ColorMode = (LayerColorMode)info.GetValue("ColorMode", typeof(LayerColorMode));
-        //}
-
-        //public void GetObjectData(SerializationInfo info, StreamingContext context)
-        //{
-        //    info.AddValue("LayerNumber", LayerNumber);
-        //    info.AddValue("LayerName", LayerName);
-        //    info.AddValue("Alpha", Alpha);
-        //    info.AddValue("Generator", Generator, Generator.GetType());
-        //    info.AddValue("ColorMode", ColorMode);
-        //}
-        #endregion
 
     }
 }

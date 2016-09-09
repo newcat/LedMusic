@@ -17,8 +17,13 @@ namespace LedMusic.Controller
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        private Waveforms _waveform = Waveforms.SINE;
-        public Waveforms Waveform
+        //0: Sine
+        //1: Square
+        //2: Triangle
+        //3: Sawtooth
+        private int _waveform = 0;
+        [Animatable(0, 3)]
+        public int Waveform
         {
             get { return _waveform; }
             set
@@ -27,6 +32,7 @@ namespace LedMusic.Controller
                 NotifyPropertyChanged();
             }
         }
+
 
         private bool _isInverted = false;
         [Animatable(0, 1)]
@@ -97,7 +103,7 @@ namespace LedMusic.Controller
             }
         }
         public double Amplitude_MinValue { get { return 0; } }
-        public double Amplitude_MaxValue { get { return minValue - maxValue; } }
+        public double Amplitude_MaxValue { get { return maxValue - minValue; } }
 
         private double _offset = 0;
         [Animatable()]
@@ -139,29 +145,106 @@ namespace LedMusic.Controller
             }
         }
 
+        public Guid _id = Guid.NewGuid();
+        public Guid Id { get { return _id; } }
+
         private double minValue;
         private double maxValue;
 
-        public LFO(double minValue, double maxValue, string propertyName)
+        public LFO()
         {
             AnimatedProperties = new ObservableCollection<AnimatedProperty>();
-            PropertyName = propertyName;
         }
 
-        public LFO() { }
+        public void initialize(string propertyName, double minValue, double maxValue)
+        {
+            PropertyName = propertyName;
+            this.minValue = minValue;
+            this.maxValue = maxValue;
+        }
 
         public double getValueAt(int frameNumber)
         {
-            
+
+            double freq = 0; // in Hz
+            double phaseOffset; // in seconds
+            double returnValue;
+
             if (IsSyncedToBeat)
             {
 
-                return 0;
+                double bpm = GlobalProperties.Instance.BPM;
+                double bps = bpm / 60;
+                
+                switch (BeatFrequency)
+                {
+                    case 1:
+                        freq = 8 * bps;
+                        break;
+                    case 2:
+                        freq = 6 * bps;
+                        break;
+                    case 3:
+                        freq = 4 * bps;
+                        break;
+                    case 4:
+                        freq = 3 * bps;
+                        break;
+                    case 5:
+                        freq = 2 * bps;
+                        break;
+                    case 6:
+                        freq = bps;
+                        break;
+                    case 7:
+                        freq = 0.5 * bps;
+                        break;
+                    case 8:
+                        freq = 0.25 * bps;
+                        break;
+                }
+
+                phaseOffset = GlobalProperties.Instance.BeatOffset * bps;
 
             } else
             {
-                return 0;
+
+                freq = Frequency;
+                phaseOffset = 0;
+
             }
+
+            double value = 0;
+            double t = (double)frameNumber / GlobalProperties.Instance.FPS;
+
+            Waveform wv = (Waveform)Waveform;
+
+            switch (wv)
+            {
+                case Models.Waveform.SINE:
+                    value = (Math.Sin(2 * Math.PI * freq * (t - phaseOffset) - 0.5 * Math.PI) * 0.5 + 0.5) * Amplitude + Offset;
+                    break;
+                case Models.Waveform.SAWTOOTH:
+                    value = Amplitude * (freq * (t - phaseOffset) - Math.Floor(freq * (t - phaseOffset))) + Offset;
+                    break;
+            }
+
+            if (IsInverted)
+            {
+                returnValue = (Amplitude + Offset) - value;
+            } else
+            {
+                returnValue = value;
+            }
+
+            if (returnValue > maxValue)
+                return maxValue;
+            else if (returnValue < minValue)
+                return minValue;
+            else if (double.IsNaN(returnValue))
+                return minValue;
+            else
+                return returnValue;
 
         }
 

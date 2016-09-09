@@ -6,5 +6,7 @@
         double getValueAt(int frameNumber);
         string PropertyName { get; }
 
+        void initialize(string propertyName, double minValue, double maxValue);
+
     }
 }

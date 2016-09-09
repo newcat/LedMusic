@@ -93,9 +93,26 @@ namespace LedMusic.Generators
         public int Glow_MinValue { get { return 0; } }
         public int Glow_MaxValue { get { return GlobalProperties.Instance.LedCount; } }
 
+        private bool _isSymmetric = false;
+        [Animatable(0, 1)]
+        public bool IsSymmectric
+        {
+            get { return _isSymmetric; }
+            set
+            {
+                _isSymmetric = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string GeneratorName { get { return "Dot"; } }
+
         public ObservableCollection<PropertyModel> AnimatableProperties { get; set; }
         public ObservableCollection<AnimatedProperty> AnimatedProperties { get; set; }
         public ObservableCollection<IController> Controllers { get; set; }
+
+        public Guid _id = Guid.NewGuid();
+        public Guid Id { get { return _id; } }
 
         public DotGenerator()
         {
@@ -115,8 +132,22 @@ namespace LedMusic.Generators
             {
                 if (i >= 0 && i < ledCount)
                     //(-abs(x - CenterPosition)) / (Glow + 1) + 1
-                    colors[i] = new ColorHSV(Math.Max((-Math.Abs(i - CenterPosition)) / (Glow + 1) + 1, 0),
-                        Hue, Saturation, Value);
+                    colors[i] = new ColorHSV(Hue, Saturation, Alpha * Math.Max((-Math.Abs(i - CenterPosition)) / (Glow + 1) + 1, 0) * Value);
+            }
+
+            if (IsSymmectric)
+            {
+                ColorHSV[] reverseColors = new ColorHSV[ledCount];
+                for (int i = 0; i < ledCount; i++)
+                {
+                    if (colors[i] == null)
+                        colors[i] = new ColorHSV(0, 0, 0);
+                    reverseColors[ledCount - i - 1] = colors[i];
+                }
+                for (int i = 0; i < ledCount; i++)
+                {
+                    colors[i] = colors[i].Add(reverseColors[i]);
+                }
             }
 
             return colors;

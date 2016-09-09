@@ -2,6 +2,8 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Windows.Input;
 
 namespace LedMusic.Models
 {
@@ -38,9 +40,51 @@ namespace LedMusic.Models
             }
         }
 
+        private bool _isSelected = false;
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set
+            {
+                _isSelected = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private KeyframeMode _mode = KeyframeMode.LINEAR;
+        public KeyframeMode Mode
+        {
+            get { return _mode; }
+            set
+            {
+                _mode = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        [field: NonSerialized]
+        private RelayCommand<string> _cmdSetTypeTo;
+        public RelayCommand<string> CmdSetTypeTo
+        {
+            get { return _cmdSetTypeTo; }
+            set
+            {
+                _cmdSetTypeTo = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public bool JustDragged { get; set; }
+
+        [OnDeserialized]
+        private void OnDeserializing(StreamingContext c)
+        {
+            CmdSetTypeTo = new RelayCommand<string>(setMode, setMode_CanExecute);
+        }
+
         public int CompareTo(Keyframe other)
         {
-            return Frame > other.Frame ? 1 : -1;
+            return Frame - other.Frame;
         }
 
         public bool Equals(Keyframe other)
@@ -54,6 +98,7 @@ namespace LedMusic.Models
             Value = value;
 
             MainModel.Instance.PropertyChanged += MainModel_PropertyChanged;
+            CmdSetTypeTo = new RelayCommand<string>(setMode, setMode_CanExecute);
         }
 
         private void MainModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -62,6 +107,29 @@ namespace LedMusic.Models
             {
                 NotifyPropertyChanged("Frame");
             }
+        }
+
+        public Keyframe Copy()
+        {
+            return new Keyframe(Frame, Value);
+        }
+
+        private void setMode(string s)
+        {
+            switch (s)
+            {
+                case "Linear":
+                    Mode = KeyframeMode.LINEAR;
+                    break;
+                case "Hold":
+                    Mode = KeyframeMode.HOLD;
+                    break;
+            }
+        }
+
+        private bool setMode_CanExecute(string s)
+        {
+            return (s == "Linear" && Mode != KeyframeMode.LINEAR) || (s == "Hold" && Mode != KeyframeMode.HOLD);
         }
     }
 }

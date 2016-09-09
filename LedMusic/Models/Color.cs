@@ -13,7 +13,6 @@ namespace LedMusic.Models
     public class ColorRGB : Color
     {
 
-        public double A { get; set; }
         public byte R { get; set; }
         public byte G { get; set; }
         public byte B { get; set; }
@@ -25,9 +24,8 @@ namespace LedMusic.Models
         /// <param name="_r">Red</param>
         /// <param name="_g">Green</param>
         /// <param name="_b">Blue</param>
-        public ColorRGB(double _a, byte _r, byte _g, byte _b)
+        public ColorRGB(byte _r, byte _g, byte _b)
         {
-            A = _a;
             R = _r;
             G = _g;
             B = _b;
@@ -45,7 +43,7 @@ namespace LedMusic.Models
             double saturation = (max == 0) ? 0 : 1d - (1d * min / max);
             double value = max / 255d;
 
-            return new ColorHSV(A, hue, saturation, value);
+            return new ColorHSV(hue, saturation, value);
 
         }
 
@@ -54,7 +52,6 @@ namespace LedMusic.Models
     public class ColorHSV : Color
     {
 
-        public double A { get; set; } //Range 0..1
         public double H { get; set; } //Range 0..359
         public double S { get; set; } //Range 0..1
         public double V { get; set; } //Range 0..1
@@ -66,9 +63,8 @@ namespace LedMusic.Models
         /// <param name="_h">Hue</param>
         /// <param name="_s">Saturation</param>
         /// <param name="_v">Value</param>
-        public ColorHSV(double _a, double _h, double _s, double _v)
+        public ColorHSV(double _h, double _s, double _v)
         {
-            A = _a;
             H = _h;
             S = _s;
             V = _v;
@@ -86,17 +82,17 @@ namespace LedMusic.Models
             byte t = Convert.ToByte(value * (1 - (1 - f) * S));
 
             if (hi == 0)
-                return new ColorRGB(A, v, t, p);
+                return new ColorRGB(v, t, p);
             else if (hi == 1)
-                return new ColorRGB(A, q, v, p);
+                return new ColorRGB(q, v, p);
             else if (hi == 2)
-                return new ColorRGB(A, p, v, t);
+                return new ColorRGB(p, v, t);
             else if (hi == 3)
-                return new ColorRGB(A, p, q, v);
+                return new ColorRGB(p, q, v);
             else if (hi == 4)
-                return new ColorRGB(A, t, p, v);
+                return new ColorRGB(t, p, v);
             else
-                return new ColorRGB(A, v, p, q);
+                return new ColorRGB(v, p, q);
         }
 
         public override ColorHSV getColorHSV() { return this; }

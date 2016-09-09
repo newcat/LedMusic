@@ -63,24 +63,30 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BassEngine.cs" />
-    <Compile Include="ChooseGeneratorWindow.xaml.cs">
+    <Compile Include="Views\ChooseControllerWindow.xaml.cs">
+      <DependentUpon>ChooseControllerWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ChooseGeneratorWindow.xaml.cs">
       <DependentUpon>ChooseGeneratorWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controller\PeakController.cs" />
+    <Compile Include="Controller\SpectrumController.cs" />
     <Compile Include="Converters\FrameToCanvasLeftConverter.cs" />
     <Compile Include="Converters\OffsetRectConverter.cs" />
     <Compile Include="Converters\ValueToCanvasTopConverter.cs" />
     <Compile Include="Converters\WidthToRectConverter.cs" />
     <Compile Include="Generators\DotGenerator.cs" />
     <Compile Include="Generators\ExplosionGenerator.cs" />
+    <Compile Include="Generators\StripGenerator.cs" />
     <Compile Include="GlobalProperties.cs" />
     <Compile Include="Helpers\EnumerationExtension.cs" />
     <Compile Include="Interfaces\IAnimatable.cs" />
     <Compile Include="Interfaces\IController.cs" />
-    <Compile Include="KeyframeTrack.xaml.cs">
+    <Compile Include="Views\KeyframeTrack.xaml.cs">
       <DependentUpon>KeyframeTrack.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\AnimatedProperty.cs" />
+    <Compile Include="Models\BeatAnimatable.cs" />
     <Compile Include="Models\Enums.cs" />
     <Compile Include="Models\Keyframe.cs" />
     <Compile Include="Controller\LFO.cs" />
@@ -88,18 +94,26 @@
     <Compile Include="Helpers\NotifyPropertyChanged.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="Models\Savefile.cs" />
+    <Compile Include="Views\RenameDialog.xaml.cs">
+      <DependentUpon>RenameDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="StaticStuff\BeatHelper.cs" />
     <Compile Include="StaticStuff\Extensions.cs" />
     <Compile Include="StaticStuff\PropertiesHelper.cs" />
     <Compile Include="Viewmodels\MainModel.cs" />
-    <Page Include="ChooseGeneratorWindow.xaml">
+    <Page Include="Views\ChooseControllerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="KeyframeTrack.xaml">
+    <Page Include="Views\ChooseGeneratorWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Views\KeyframeTrack.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -109,10 +123,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Interfaces\IGenerator.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\RenameDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\Color.cs" />

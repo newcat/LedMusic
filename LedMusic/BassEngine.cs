@@ -279,6 +279,19 @@ namespace LedMusic
             return Bass.BASS_ChannelGetLevels(levelStream, (float)duration, BASSLevel.BASS_LEVEL_STEREO);
 
         }
+
+        public bool getFFTAt(double seconds, float[] fftDataBuffer)
+        {
+
+            if (levelStream == 0 && File != "")
+            {
+                levelStream = Bass.BASS_StreamCreateFile(File, 0, 0, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT | BASSFlag.BASS_STREAM_PRESCAN);
+                if (levelStream == 0)
+                    return false;
+            }
+            Bass.BASS_ChannelSetPosition(levelStream, seconds);
+            return (Bass.BASS_ChannelGetData(levelStream, fftDataBuffer, maxFFT)) > 0;
+        }
         #endregion
 
         #region Event Handleres
