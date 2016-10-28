@@ -8,6 +8,7 @@
         xmlns:conv="clr-namespace:LedMusic.Converters"
         xmlns:vm="clr-namespace:LedMusic.Viewmodels"
         xmlns:model="clr-namespace:LedMusic.Models"
+        xmlns:view="clr-namespace:LedMusic.Views"
         mc:Ignorable="d"
         Title="MainWindow" Height="700" Width="1000" MinWidth="865" MinHeight="700" Loaded="Window_Loaded" >
 
@@ -117,7 +118,7 @@
 
                         <Canvas Width="{Binding TrackWidth}" Height="30" Background="Gray" Grid.Row="0"/>
 
-                        <svl:WaveformTimeline x:Name="waveformTimeline" HorizontalAlignment="Left" VerticalAlignment="Top" Height="100" Width="{Binding TrackWidth}" AutoScaleWaveformCache="True"
+                        <!--<svl:WaveformTimeline x:Name="waveformTimeline" HorizontalAlignment="Left" VerticalAlignment="Top" Height="100" Width="{Binding TrackWidth}" AutoScaleWaveformCache="True"
                                           Background="#88000000" RightLevelBrush="{StaticResource WaveformBrush}" LeftLevelBrush="{StaticResource WaveformBrush}" Grid.Row="1">
                             <svl:WaveformTimeline.Style>
                                 <Style TargetType="svl:WaveformTimeline">
@@ -137,7 +138,10 @@
                                     </Setter>
                                 </Style>
                             </svl:WaveformTimeline.Style>
-                        </svl:WaveformTimeline>
+                        </svl:WaveformTimeline>-->
+
+                        <view:Waveform x:Name="wvfTimeline" HorizontalAlignment="Left" VerticalAlignment="Top" Height="100" Width="{Binding TrackWidth}"
+                                       Grid.Row="1" Background="#88000000" Samples="{Binding Samples, Source={x:Static local:SoundEngine.Instance}}" />
 
                         <ItemsControl ItemsSource="{Binding CurrentAnimatable.AnimatedProperties}" Grid.Row="2">
                             <ItemsControl.ItemTemplate>
@@ -183,6 +187,8 @@
                     </ContextMenu>
                 </ListView.ContextMenu>
             </ListView>
+
+            <!--<view:Knob Height="50" Width="50" Grid.Column="1" Panel.ZIndex="2" />-->
 
             <ListView x:Name="lvGeneratorSettigns" Grid.Column="1" Height="180" Margin="10,10,10,0" VerticalAlignment="Top" ItemsSource="{Binding CurrentAnimatable.AnimatableProperties}">
 
@@ -265,6 +271,10 @@
             <Button x:Name="btnDecreaseZoom" Content="-" Grid.Column="1" Margin="0,10,10,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnDecreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
             <Button x:Name="btnIncreaseZoom" Content="+" Grid.Column="1" Margin="0,10,35,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnIncreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
             <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" TextWrapping="Wrap" Text="{Binding CurrentFrame}" VerticalAlignment="Top" />
+            <ComboBox x:Name="combOutputDevice" Width="150" Height="20" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Margin="100,0,0,0" DisplayMemberPath="FriendlyName"
+                      ItemsSource="{Binding Devices, Source={x:Static local:SoundEngine.Instance}}"/>
+            <Slider x:Name="sliderVolume" Width="150" Height="20" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Margin="270,0,0,0" Maximum="100"
+                    Value="{Binding Volume, Source={x:Static local:SoundEngine.Instance}}"/>
 
         </Grid>
     </DockPanel>

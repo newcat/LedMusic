@@ -22,8 +22,7 @@ namespace LedMusic
 
         public MainWindow()
         {
-            InitializeComponent();
-            waveformTimeline.RegisterSoundPlayer(BassEngine.Instance);
+            InitializeComponent();           
 
             sliderBPM.DataContext = GlobalProperties.Instance;
             sliderFPS.DataContext = GlobalProperties.Instance;
@@ -43,16 +42,16 @@ namespace LedMusic
             //TODO: Either the bring-into-view function of the playback indicator needs to be disabled while dragging
             //or the playback position needs to be adjusted accordingly
 
-            if (Mouse.LeftButton == MouseButtonState.Released)
+            if (Mouse.LeftButton == MouseButtonState.Released || !scrollViewer.IsMouseOver)
                 return;
 
             if (Mouse.GetPosition(scrollViewer).X < 20)
             {
-                BassEngine.Instance.ChannelPosition -= 0.001 * BassEngine.Instance.ChannelLength;
+                SoundEngine.Instance.Position -= TimeSpan.FromMilliseconds(100);
             }
             else if (Mouse.GetPosition(scrollViewer).X > scrollViewer.ActualWidth - 20)
             {
-                BassEngine.Instance.ChannelPosition += 0.001 * BassEngine.Instance.ChannelLength;
+                SoundEngine.Instance.Position += TimeSpan.FromMilliseconds(100);
             }
         }
 
@@ -156,11 +155,11 @@ namespace LedMusic
             {
                 MainModel.Instance.UnselectAllKeyframes();
 
-                if (BassEngine.Instance.ChannelLength == 0)
+                if (SoundEngine.Instance.Length == TimeSpan.Zero)
                     return;
 
-                double secondWidth = MainModel.Instance.TrackWidth / BassEngine.Instance.ChannelLength;
-                BassEngine.Instance.ChannelPosition = e.GetPosition(canvas).X / secondWidth;
+                double secondWidth = MainModel.Instance.TrackWidth / SoundEngine.Instance.Length.TotalSeconds;
+                SoundEngine.Instance.Position = TimeSpan.FromSeconds(e.GetPosition(canvas).X / secondWidth);
             }
         }
 
@@ -168,13 +167,13 @@ namespace LedMusic
         {
             if (e.Key == Key.Space)
             {
-                if (BassEngine.Instance.CanPlay)
+                if (SoundEngine.Instance.CanPlay)
                 {
-                    BassEngine.Instance.Play();
+                    SoundEngine.Instance.Play();
                 }
-                else if (BassEngine.Instance.CanPause)
+                else if (SoundEngine.Instance.CanPause)
                 {
-                    BassEngine.Instance.Pause();
+                    SoundEngine.Instance.Pause();
                 }
             }
             else if (e.Key == Key.Left && MainModel.Instance.CurrentFrame > 0)

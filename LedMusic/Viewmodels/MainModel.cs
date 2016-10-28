@@ -185,7 +185,7 @@ namespace LedMusic.Viewmodels
         private MainModel() {
             _layers = new ObservableCollection<Layer>();
             PropertyChanged += this_PropertyChanged;
-            BassEngine.Instance.PropertyChanged += BassEngine_PropertyChanged;
+            SoundEngine.Instance.PropertyChanged += SoundEngine_PropertyChanged;
             GlobalProperties.Instance.PropertyChanged += GlobalProperties_PropertyChanged;
 
             CmdAnimate = new RelayCommand<string>(cmdAnimate_Execute, cmdAnimate_CanExecute);
@@ -197,14 +197,14 @@ namespace LedMusic.Viewmodels
                 (s) => { return hasController(s); });
             CmdOpenMusicFile = new RelayCommand(cmdOpenMusicFile_Execute);
             CmdPlay = new RelayCommand(
-                () => { BassEngine.Instance.Play(); },
-                () => { return BassEngine.Instance.CanPlay; });
+                () => { SoundEngine.Instance.Play(); },
+                () => { return SoundEngine.Instance.CanPlay; });
             CmdPause = new RelayCommand(
-                () => { BassEngine.Instance.Pause(); },
-                () => { return BassEngine.Instance.CanPause; });
+                () => { SoundEngine.Instance.Pause(); },
+                () => { return SoundEngine.Instance.CanPause; });
             CmdStop = new RelayCommand(
-                () => { BassEngine.Instance.Stop(); },
-                () => { return BassEngine.Instance.CanStop; });
+                () => { SoundEngine.Instance.Stop(); },
+                () => { return SoundEngine.Instance.CanStop; });
             CmdChooseGenerator = new RelayCommand(cmdChooseGenerator_Execute, () => { return CurrentLayer != null; });
             CmdAddLayer = new RelayCommand(cmdAddLayer_Execute);
             CmdRemoveLayer = new RelayCommand(cmdRemoveLayer_Execute, () => { return CurrentLayer != null; });
@@ -246,14 +246,15 @@ namespace LedMusic.Viewmodels
                 updateChannelPosition();
                 updateBeatDisplay();
                 updatePreviewStrip();
+                SoundEngine.Instance.CalculateFft();
             }
         }
 
-        private void BassEngine_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void SoundEngine_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "ChannelLength")
+            if (e.PropertyName == "Length")
                 updateGrid();
-            if (e.PropertyName == "ChannelPosition")
+            if (e.PropertyName == "Position")
                 calculateCurrentFrame();
         }
 
@@ -267,7 +268,7 @@ namespace LedMusic.Viewmodels
         public void updateGrid()
         {
 
-            double trackDuration = BassEngine.Instance.ChannelLength;
+            double trackDuration = SoundEngine.Instance.Length.TotalSeconds;
             if (trackDuration == 0)
                 return;
 
@@ -290,7 +291,7 @@ namespace LedMusic.Viewmodels
         public void updateChannelPosition()
         {
 
-            double trackDuration = BassEngine.Instance.ChannelLength;
+            double trackDuration = SoundEngine.Instance.Length.TotalSeconds;
             if (trackDuration == 0)
                 return;
 
@@ -309,7 +310,7 @@ namespace LedMusic.Viewmodels
         private void calculateCurrentFrame()
         {
             int fps = GlobalProperties.Instance.FPS;
-            double time = BassEngine.Instance.ChannelPosition;
+            double time = SoundEngine.Instance.Position.TotalSeconds;
             CurrentFrame = (int)Math.Floor(time * fps);
         }
 
@@ -347,8 +348,8 @@ namespace LedMusic.Viewmodels
                 if (ap == null)
                     return;
 
-                Keyframe kf;
-                if (containsKeyframe(CurrentFrame, ap.Keyframes, out kf))
+                Keyframe kf = ap.Keyframes.FirstOrDefault(k => k.Frame == CurrentFrame);
+                if (kf != null)
                 {
                     kf.Value = value;
                 }
@@ -529,7 +530,7 @@ namespace LedMusic.Viewmodels
 
             //Set properties according to the keyframes
             IAnimatable a = (IAnimatable)g;
-            setProperties(ref a, frame);
+            setProperties(a, frame);
 
             Models.Color[] thisLayerColor = g.getSample(frame);
 
@@ -552,23 +553,23 @@ namespace LedMusic.Viewmodels
             return new SampleTaskReturn(l.LayerNumber, thisLayerColor);
         }
 
-        private void setProperties(ref IAnimatable a, int frame)
+        private void setProperties(IAnimatable a, int frame)
         {
-            applyKeyframes(ref a, frame);
+            applyKeyframes(a, frame);
 
             foreach (IController con in a.Controllers)
             {
                 IAnimatable aCon = (IAnimatable)con;
                 if (aCon != null)
                 {
-                    setProperties(ref aCon, frame);
-                    applyKeyframes(ref aCon, frame);
+                    setProperties(aCon, frame);
+                    applyKeyframes(aCon, frame);
                 }
-                setPropertyValue(ref a, con.PropertyName, con.getValueAt(frame));
+                setPropertyValue(a, con.PropertyName, con.getValueAt(frame));
             }
         }
 
-        private void applyKeyframes(ref IAnimatable a, int frame)
+        private void applyKeyframes(IAnimatable a, int frame)
         {
             foreach (AnimatedProperty ap in a.AnimatedProperties)
             {
@@ -578,19 +579,19 @@ namespace LedMusic.Viewmodels
                     if (a.Controllers[i] is IAnimatable)
                     {
                         IAnimatable c = (IAnimatable)a.Controllers[i];
-                        applyKeyframes(ref c, frame);
+                        applyKeyframes(c, frame);
                         a.Controllers[i] = (IController)c;
                     }
                 }
 
-                Keyframe k = getKeyframeAt(frame, ap.Keyframes);
+                Keyframe k = ap.Keyframes.FirstOrDefault(kf => kf.Frame == frame);
 
                 double value = 0;
 
                 if (k == null)
                 {
-                    Keyframe pK = findPreviousKeyframe(frame, ap.Keyframes);
-                    Keyframe nK = findNextKeyframe(frame, ap.Keyframes);
+                    Keyframe pK = ap.Keyframes.LastOrDefault(kf => kf.Frame < frame);
+                    Keyframe nK = ap.Keyframes.FirstOrDefault(kf => kf.Frame > frame);
 
                     if (pK == null)
                     {
@@ -619,12 +620,12 @@ namespace LedMusic.Viewmodels
                     value = k.Value;
                 }
 
-                setPropertyValue(ref a, ap.PropertyName, value);
+                setPropertyValue(a, ap.PropertyName, value);
 
             }
         }
 
-        private void setPropertyValue(ref IAnimatable a, string propertyName, double value)
+        private void setPropertyValue(IAnimatable a, string propertyName, double value)
         {
             PropertyInfo pi = a.GetType().GetProperty(propertyName);
 
@@ -641,64 +642,6 @@ namespace LedMusic.Viewmodels
             {
                 pi.SetValue(a, value);
             }
-        }
-
-        private Keyframe getKeyframeAt(int frame, IEnumerable<Keyframe> keyframes)
-        {
-            foreach (Keyframe k in keyframes)
-            {
-                if (k.Frame == frame)
-                    return k;
-            }
-            return null;
-        }
-
-        private Keyframe findPreviousKeyframe(int frame, IEnumerable<Keyframe> keyframes)
-        {
-            Keyframe closestKeyframe = null;
-            int diff = 0;
-
-            foreach (Keyframe k in keyframes)
-            {
-                if (k.Frame < frame && (frame - k.Frame < diff || diff == 0))
-                {
-                    closestKeyframe = k;
-                    diff = frame - k.Frame;
-                }
-            }
-
-            return closestKeyframe;
-        }
-
-        private Keyframe findNextKeyframe(int frame, IEnumerable<Keyframe> keyframes)
-        {
-            Keyframe closestKeyframe = null;
-            int diff = 0;
-
-            foreach (Keyframe k in keyframes)
-            {
-                if (k.Frame > frame && (k.Frame - frame < diff || diff == 0))
-                {
-                    closestKeyframe = k;
-                    diff = k.Frame - frame;
-                }
-            }
-
-            return closestKeyframe;
-        }
-
-        private bool containsKeyframe(int frame, IEnumerable<Keyframe> keyframes, out Keyframe k)
-        {
-            foreach (Keyframe kf in keyframes)
-            {
-                if (kf.Frame == frame)
-                {
-                    k = kf;
-                    return true;
-                }
-            }
-            k = null;
-            return false;
         }
         #endregion
 
@@ -750,7 +693,7 @@ namespace LedMusic.Viewmodels
                 CurrentAnimatable.AnimatedProperties.Remove(toRemove);
         }
 
-        private void cmdOpenMusicFile_Execute()
+        private async void cmdOpenMusicFile_Execute()
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Multiselect = false;
@@ -758,7 +701,7 @@ namespace LedMusic.Viewmodels
             ofd.Filter = "Audio files (*.wav;*.mp3)|*.wav;*mp3";
             if (ofd.ShowDialog() == true)
             {
-                BassEngine.Instance.OpenFile(ofd.FileName);
+                await SoundEngine.Instance.OpenFile(ofd.FileName);
             }
         }
 
@@ -959,7 +902,7 @@ namespace LedMusic.Viewmodels
 
         }
 
-        public void Open()
+        public async void Open()
         {
 
             OpenFileDialog ofd = new OpenFileDialog();
@@ -979,7 +922,7 @@ namespace LedMusic.Viewmodels
                 GlobalProperties.Instance.BeatOffset = s.beatOffset;
                 GlobalProperties.Instance.FPS = s.fps;
 
-                BassEngine.Instance.OpenFile(s.musicFile);
+                await SoundEngine.Instance.OpenFile(s.musicFile);
 
                 Layers = new ObservableCollection<Layer>(s.layers);
 
@@ -1110,9 +1053,9 @@ namespace LedMusic.Viewmodels
                 {
                     foreach (Keyframe k in clipboard[ap.PropertyName])
                     {
-                        Keyframe kf = null;
+                        Keyframe kf = ap.Keyframes.FirstOrDefault(lkf => lkf.Frame == k.Frame);
                         k.Frame += delta;
-                        if (containsKeyframe(k.Frame, ap.Keyframes, out kf))
+                        if (kf != null)
                         {
                             kf.Value = k.Value;
                         } else

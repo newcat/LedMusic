@@ -1,13 +1,9 @@
 ﻿using LedMusic.Interfaces;
 using LedMusic.Models;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LedMusic.Controller
 {
@@ -160,14 +156,12 @@ namespace LedMusic.Controller
 
         public double getValueAt(int frame)
         {
-            int lowerFrequencyIndex = BassEngine.Instance.GetFFTFrequencyIndex((int)Math.Round(Math.Pow(2, LowerFrequency)));
-            int upperFrequencyIndex = BassEngine.Instance.GetFFTFrequencyIndex((int)Math.Round(Math.Pow(2, UpperFrequency)));
+            int lowerFrequencyIndex = SoundEngine.Instance.GetFftBandIndex((float)Math.Pow(2, LowerFrequency));
+            int upperFrequencyIndex = SoundEngine.Instance.GetFftBandIndex((float)Math.Pow(2, UpperFrequency));
 
             double t = (double)frame / GlobalProperties.Instance.FPS;
 
-            float[] fftData = new float[2048];
-            if (!BassEngine.Instance.getFFTAt(t, fftData))
-                return 0;
+            float[] fftData = SoundEngine.Instance.CurrentFftData;
 
             double totalLevel = 0;
 

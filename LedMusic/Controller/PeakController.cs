@@ -117,20 +117,19 @@ namespace LedMusic.Controller
 
         public double getValueAt(int frameNumber)
         {
-            int fps = GlobalProperties.Instance.FPS;
-            float[] levels = BassEngine.Instance.getLevelAt(frameNumber / (double)fps, 1.0 / fps);
-            double avgLevel = (levels[0] + levels[1]) / 2.0;
+
+            float level = SoundEngine.Instance.GetCurrentSample();
             double returnValue;
 
-            if (avgLevel > UpperThreshold)
+            if (level > UpperThreshold)
             {
                 returnValue = Amplitude * maxValue;
-            } else if (avgLevel < LowerThreshold)
+            } else if (level < LowerThreshold)
             {
                 returnValue = minValue;
             } else
             {
-                returnValue = Amplitude * (maxValue - minValue) * ((avgLevel - LowerThreshold) / (UpperThreshold - LowerThreshold)) + minValue;
+                returnValue = Amplitude * (maxValue - minValue) * ((level - LowerThreshold) / (UpperThreshold - LowerThreshold)) + minValue;
             }
 
             if (returnValue > maxValue)

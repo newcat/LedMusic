@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LedMusic.Models
 {
@@ -15,7 +12,7 @@ namespace LedMusic.Models
         public int ledCount = GlobalProperties.Instance.LedCount;
         public double bpm = GlobalProperties.Instance.BPM;
         public double beatOffset = GlobalProperties.Instance.BeatOffset;
-        public string musicFile = BassEngine.Instance.File;
+        public string musicFile = SoundEngine.Instance.File;
 
         public List<Layer> layers;
 

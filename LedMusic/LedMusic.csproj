@@ -38,6 +38,10 @@
     <Reference Include="Bass.Net">
       <HintPath>C:\Users\Freddy\Bass.NET\v4.5\Bass.Net.dll</HintPath>
     </Reference>
+    <Reference Include="CSCore, Version=1.1.5992.18249, Culture=neutral, PublicKeyToken=5a08f2b6f4415dea, processorArchitecture=MSIL">
+      <HintPath>..\packages\CSCore.1.1.0\lib\net35-client\CSCore.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -62,7 +66,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="BassEngine.cs" />
+    <None Include="BassEngine.cs" />
+    <Compile Include="SoundEngine.cs" />
     <Compile Include="Views\ChooseControllerWindow.xaml.cs">
       <DependentUpon>ChooseControllerWindow.xaml</DependentUpon>
     </Compile>
@@ -94,6 +99,9 @@
     <Compile Include="Helpers\NotifyPropertyChanged.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="Models\Savefile.cs" />
+    <Compile Include="Views\Knob.xaml.cs">
+      <DependentUpon>Knob.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\RenameDialog.xaml.cs">
       <DependentUpon>RenameDialog.xaml</DependentUpon>
     </Compile>
@@ -101,6 +109,9 @@
     <Compile Include="StaticStuff\Extensions.cs" />
     <Compile Include="StaticStuff\PropertiesHelper.cs" />
     <Compile Include="Viewmodels\MainModel.cs" />
+    <Compile Include="Views\Waveform.xaml.cs">
+      <DependentUpon>Waveform.xaml</DependentUpon>
+    </Compile>
     <Page Include="Views\ChooseControllerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -110,6 +121,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\KeyframeTrack.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Knob.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -128,6 +143,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\RenameDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Waveform.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -152,6 +171,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

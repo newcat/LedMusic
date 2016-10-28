@@ -32,7 +32,8 @@ namespace LedMusic
                 ((Keyframe)((Rectangle)sender).DataContext).IsSelected = true;
             }
             ((Rectangle)sender).CaptureMouse();
-            BassEngine.Instance.ChannelPosition = ((Keyframe)((Rectangle)sender).DataContext).Frame / (double)GlobalProperties.Instance.FPS;
+            SoundEngine.Instance.Position = TimeSpan.FromSeconds(
+                ((Keyframe)((Rectangle)sender).DataContext).Frame / (double)GlobalProperties.Instance.FPS);
 
         }
 
@@ -53,12 +54,12 @@ namespace LedMusic
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                if (BassEngine.Instance.ChannelLength == 0)
+                if (SoundEngine.Instance.Length == TimeSpan.Zero)
                     return;
 
                 //TODO: Fix the issue that the y coord seemingly also affects the delta
                 //(Width of a second) * (duration of a frame)
-                double frameWidth = (MainModel.Instance.TrackWidth / BassEngine.Instance.ChannelLength) * (1.0 / GlobalProperties.Instance.FPS);
+                double frameWidth = (MainModel.Instance.TrackWidth / SoundEngine.Instance.Length.TotalSeconds) * (1.0 / GlobalProperties.Instance.FPS);
                 double xDelta = e.GetPosition((Rectangle)sender).X; // - 0.5 * Math.Sqrt(200);
                 Debug.WriteLine(Convert.ToInt32(xDelta / frameWidth));
                 if (Math.Abs(xDelta) > frameWidth)

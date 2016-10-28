@@ -1,6 +1,4 @@
-﻿using LedMusic.Generators;
-using LedMusic.Models;
-using LedMusic.Viewmodels;
+﻿using LedMusic.Viewmodels;
 using System.Windows;
 
 namespace LedMusic
@@ -19,7 +17,14 @@ namespace LedMusic
             MainModel model = MainModel.Instance;
             mw.DataContext = model;
             mw.Show();
+            mw.Closed += Mw_Closed;
 
+        }
+
+        private void Mw_Closed(object sender, System.EventArgs e)
+        {
+            SoundEngine.Instance.Stop();
+            SoundEngine.Instance.CleanupPlayback();
         }
     }
 }
