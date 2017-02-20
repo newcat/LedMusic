@@ -1,4 +1,5 @@
-﻿using LedMusic.Interfaces;
+﻿using LedMusic.Controller;
+using LedMusic.Interfaces;
 using LedMusic.Models;
 using LedMusic.StaticStuff;
 using Microsoft.Win32;
@@ -58,7 +59,7 @@ namespace LedMusic.Viewmodels
             get { return _currentAnimatable; }
             set
             {
-                saveAnimatable(_currentAnimatable);
+                //saveAnimatable(_currentAnimatable);
                 _currentAnimatable = value;
                 NotifyPropertyChanged();
             }
@@ -162,7 +163,7 @@ namespace LedMusic.Viewmodels
         private const bool outputToSerial = false;
         private volatile bool isOutputtingToSerial = false;
 
-        private BeatAnimatable beatAnimatable = new BeatAnimatable(); 
+        //private BeatAnimatable beatAnimatable = new BeatAnimatable(); 
 
         public RelayCommand<string> CmdAnimate { get; private set; }
         public RelayCommand<string> CmdRemoveAnimation { get; private set; }
@@ -189,30 +190,43 @@ namespace LedMusic.Viewmodels
             GlobalProperties.Instance.PropertyChanged += GlobalProperties_PropertyChanged;
 
             CmdAnimate = new RelayCommand<string>(cmdAnimate_Execute, cmdAnimate_CanExecute);
-            CmdRemoveAnimation = new RelayCommand<string>(cmdRemoveAnimation_Execute,
-                (s) => { return isPropertyAnimated(s, CurrentAnimatable.AnimatedProperties); });
-            CmdEditController = new RelayCommand<string>(cmdEditController_Execute,
-                (s) => { return !isPropertyAnimated(s, CurrentAnimatable.AnimatedProperties); });
-            CmdRemoveController = new RelayCommand<string>(cmdRemoveController_Execute,
-                (s) => { return hasController(s); });
-            CmdOpenMusicFile = new RelayCommand(cmdOpenMusicFile_Execute);
+            CmdRemoveAnimation = new RelayCommand<string>(
+                cmdRemoveAnimation_Execute,
+                (s) => isPropertyAnimated(s, CurrentAnimatable));
+            CmdEditController = new RelayCommand<string>(
+                cmdEditController_Execute,
+                (s) => !isPropertyAnimated(s, CurrentAnimatable));
+            CmdRemoveController = new RelayCommand<string>(
+                cmdRemoveController_Execute,
+                (s) => hasController(s));
+            CmdOpenMusicFile = new RelayCommand(
+                cmdOpenMusicFile_Execute);
             CmdPlay = new RelayCommand(
-                () => { SoundEngine.Instance.Play(); },
-                () => { return SoundEngine.Instance.CanPlay; });
+                () => SoundEngine.Instance.Play(),
+                () => SoundEngine.Instance.CanPlay);
             CmdPause = new RelayCommand(
-                () => { SoundEngine.Instance.Pause(); },
-                () => { return SoundEngine.Instance.CanPause; });
+                () => SoundEngine.Instance.Pause(),
+                () => SoundEngine.Instance.CanPause);
             CmdStop = new RelayCommand(
-                () => { SoundEngine.Instance.Stop(); },
-                () => { return SoundEngine.Instance.CanStop; });
-            CmdChooseGenerator = new RelayCommand(cmdChooseGenerator_Execute, () => { return CurrentLayer != null; });
-            CmdAddLayer = new RelayCommand(cmdAddLayer_Execute);
-            CmdRemoveLayer = new RelayCommand(cmdRemoveLayer_Execute, () => { return CurrentLayer != null; });
-            CmdMoveLayerUp = new RelayCommand(cmdMoveLayerUp_Execute,
-                () => { return (CurrentLayer != null) && (CurrentLayer.LayerNumber > 0); });
-            CmdMoveLayerDown = new RelayCommand(cmdMoveLayerDown_Execute,
-                () => { return (CurrentLayer != null) && (CurrentLayer.LayerNumber < Layers.Count - 1); });
-            CmdRenameLayer = new RelayCommand(cmdRenameLayer_Execute, () => { return CurrentLayer != null; });
+                () => SoundEngine.Instance.Stop(),
+                () => SoundEngine.Instance.CanStop);
+            CmdChooseGenerator = new RelayCommand(
+                cmdChooseGenerator_Execute,
+                () => CurrentLayer != null);
+            CmdAddLayer = new RelayCommand(
+                cmdAddLayer_Execute);
+            CmdRemoveLayer = new RelayCommand(
+                cmdRemoveLayer_Execute,
+                () => CurrentLayer != null);
+            CmdMoveLayerUp = new RelayCommand(
+                cmdMoveLayerUp_Execute,
+                () => (CurrentLayer != null) && (CurrentLayer.LayerNumber > 0));
+            CmdMoveLayerDown = new RelayCommand(
+                cmdMoveLayerDown_Execute,
+                () => (CurrentLayer != null) && (CurrentLayer.LayerNumber < Layers.Count - 1));
+            CmdRenameLayer = new RelayCommand(
+                cmdRenameLayer_Execute,
+                () => CurrentLayer != null);
 
             fillGeneratorsList();
             fillControllersList();
@@ -238,9 +252,6 @@ namespace LedMusic.Viewmodels
             {
                 updateGrid();
                 updateChannelPosition();
-            } else if (e.PropertyName == "CurrentAnimatable")
-            {
-                PropertiesHelper.updateAnimatableProperties(ref _currentAnimatable);
             } else if (e.PropertyName == "CurrentFrame")
             {
                 updateChannelPosition();
@@ -332,7 +343,7 @@ namespace LedMusic.Viewmodels
             Type[] gens = Assembly.GetCallingAssembly().GetTypes().Where(t => string.Equals(t.Namespace, "LedMusic.Controller", StringComparison.Ordinal)).ToArray();
             foreach (Type t in gens)
             {
-                if (t.GetInterfaces().Contains(typeof(IController)))
+                if (t.BaseType == typeof(ControllerBase))
                     controllerNames.Add(t.Name);
             }
             AvailableControllers = controllerNames;
@@ -341,98 +352,53 @@ namespace LedMusic.Viewmodels
         public void ChangeAnimatableParameter(double value, string propertyName)
         {
 
-            if (isPropertyAnimated(propertyName, CurrentAnimatable.AnimatedProperties))
-            {
-                AnimatedProperty ap;
-                getAnimatedPropertyReference(propertyName, CurrentAnimatable.AnimatedProperties, out ap);
-                if (ap == null)
-                    return;
+            PropertyModel pm = CurrentAnimatable.AnimatableProperties.GetProperty(propertyName);
 
-                Keyframe kf = ap.Keyframes.FirstOrDefault(k => k.Frame == CurrentFrame);
+            if (isPropertyAnimated(propertyName, CurrentAnimatable))
+            {
+                Keyframe kf = pm.Keyframes.FirstOrDefault(k => k.Frame == CurrentFrame);
                 if (kf != null)
                 {
                     kf.Value = value;
                 }
                 else
                 {
-                    ap.Keyframes.Add(new Keyframe(CurrentFrame, value));
+                    pm.Keyframes.Add(new Keyframe(CurrentFrame, value));
                 }
             }
             else
             {
-                PropertyInfo pi = CurrentAnimatable.GetType().GetProperty(propertyName);
-                if (pi == null)
-                    return;
-
-                if (pi.PropertyType == typeof(int))
-                {
-                    pi.SetValue(CurrentAnimatable, (int)value);
-                }
-                else if (pi.PropertyType == typeof(double))
-                {
-                    pi.SetValue(CurrentAnimatable, value);
-                }
-                else if (pi.PropertyType == typeof(bool))
-                {
-                    pi.SetValue(CurrentAnimatable, value > 0.5 ? true : false);
-                }
+                pm.PercentageValue = value;
             }
 
         }
 
-        private void saveAnimatable(IAnimatable a)
+        private bool isPropertyAnimated(PropertyModel pm)
         {
-
-            if (a == null)
-                return;
-
-            if (a.Id == CurrentAnimatable.Id)
-            {
-                a = CurrentAnimatable;
-            } else
-            {
-                foreach (IController c in a.Controllers)
-                {
-                    if (c is IAnimatable)
-                    {
-                        saveAnimatable((IAnimatable)c);
-                    }
-                }
-            }
+            if (pm == null)
+                return false;
+            else
+                return pm.Keyframes.Count > 0;
         }
-
-        private bool isPropertyAnimated(string propertyName, IEnumerable<AnimatedProperty> animatedProperties)
+        private bool isPropertyAnimated(string propertyName, IAnimatable a)
         {
-
-            if (animatedProperties == null)
+            if (propertyName == null || a == null)
                 return false;
 
-            foreach (AnimatedProperty ap in animatedProperties)
-            {
-                if (ap.PropertyName == propertyName)
-                    return true;
-            }
-            return false;
+            return isPropertyAnimated(a.AnimatableProperties.GetProperty(propertyName));
         }
 
-        private void getAnimatedPropertyReference(string propertyName, IEnumerable<AnimatedProperty> animatedProperties, out AnimatedProperty ap)
+        private bool hasController(string propertyName)
         {
+            if (CurrentAnimatable == null || propertyName == null)
+                return false;
 
-            if (animatedProperties == null)
-            {
-                ap = null;
-                return;
-            }
+            PropertyModel pm = CurrentAnimatable.AnimatableProperties.GetProperty(propertyName);
 
-            foreach (AnimatedProperty _ap in animatedProperties)
-            {
-                if (_ap.PropertyName == propertyName)
-                {
-                    ap = _ap;
-                    return;
-                }
-            }
-            ap = null;
+            if (pm == null)
+                return false;
+            else
+                return pm.Controller != null;
         }
 
         #region Mixdown and Rendering
@@ -480,9 +446,6 @@ namespace LedMusic.Viewmodels
         private ColorRGB[] getColorsByFrame(int frame)
         {
 
-            //Copy the layers list so changing the properties doesnt change them in the UI
-            //-> avoids creating keyframes
-            List<Layer> localLayers = new List<Layer>(Layers);
             int ledCount = GlobalProperties.Instance.LedCount;
             ColorRGB[] final = new ColorRGB[ledCount];
 
@@ -494,7 +457,7 @@ namespace LedMusic.Viewmodels
             var taskList = new List<Task<SampleTaskReturn>>();
             
 
-            foreach (Layer l in localLayers)
+            foreach (Layer l in Layers)
             {
                 taskList.Add(Task.Factory.StartNew(() => getLayerSample(l, frame)));
             }
@@ -508,12 +471,12 @@ namespace LedMusic.Viewmodels
             }
             returns.Sort();
 
-            for (int l = localLayers.Count - 1; l >= 0; l--)
+            for (int l = Layers.Count - 1; l >= 0; l--)
             {
                 for (int j = 0; j < ledCount; j++)
                 {
                     ColorHSV chsv = returns[l].Leds[j].getColorHSV();
-                    chsv.V = chsv.V * localLayers[l].Alpha;
+                    chsv.V = chsv.V * Layers[l].Alpha;
                     final[j] = chsv.getColorRGB().Overlay(final[j]);
                 }
             }
@@ -530,7 +493,8 @@ namespace LedMusic.Viewmodels
 
             //Set properties according to the keyframes
             IAnimatable a = (IAnimatable)g;
-            setProperties(a, frame);
+            applyKeyframes(a, frame);
+            applyControllers(a, frame);
 
             Models.Color[] thisLayerColor = g.getSample(frame);
 
@@ -553,94 +517,72 @@ namespace LedMusic.Viewmodels
             return new SampleTaskReturn(l.LayerNumber, thisLayerColor);
         }
 
-        private void setProperties(IAnimatable a, int frame)
-        {
-            applyKeyframes(a, frame);
-
-            foreach (IController con in a.Controllers)
-            {
-                IAnimatable aCon = (IAnimatable)con;
-                if (aCon != null)
-                {
-                    setProperties(aCon, frame);
-                    applyKeyframes(aCon, frame);
-                }
-                setPropertyValue(a, con.PropertyName, con.getValueAt(frame));
-            }
-        }
-
         private void applyKeyframes(IAnimatable a, int frame)
         {
-            foreach (AnimatedProperty ap in a.AnimatedProperties)
+            foreach (PropertyModel pm in a.AnimatableProperties)
             {
 
-                for (int i = 0; i < a.Controllers.Count; i++)
+                if (pm.Controller != null)
                 {
-                    if (a.Controllers[i] is IAnimatable)
-                    {
-                        IAnimatable c = (IAnimatable)a.Controllers[i];
-                        applyKeyframes(c, frame);
-                        a.Controllers[i] = (IController)c;
-                    }
+                    IAnimatable c = pm.Controller;
+                    applyKeyframes(c, frame);
+                    pm.Controller = (ControllerBase)c;
                 }
 
-                Keyframe k = ap.Keyframes.FirstOrDefault(kf => kf.Frame == frame);
-
-                double value = 0;
-
-                if (k == null)
+                if (pm.Keyframes != null && pm.Keyframes.Count > 0)
                 {
-                    Keyframe pK = ap.Keyframes.LastOrDefault(kf => kf.Frame < frame);
-                    Keyframe nK = ap.Keyframes.FirstOrDefault(kf => kf.Frame > frame);
 
-                    if (pK == null)
+                    Keyframe k = pm.Keyframes.FirstOrDefault(kf => kf.Frame == frame);
+
+                    double value = 0;
+
+                    if (k == null)
                     {
-                        value = nK.Value;
-                    }
-                    else if (nK == null)
-                    {
-                        value = pK.Value;
+                        Keyframe previousKeyframe = pm.Keyframes.LastOrDefault(kf => kf.Frame < frame);
+                        Keyframe nextKeyframe = pm.Keyframes.FirstOrDefault(kf => kf.Frame > frame);
+
+                        if (previousKeyframe == null)
+                        {
+                            value = nextKeyframe.Value;
+                        }
+                        else if (nextKeyframe == null)
+                        {
+                            value = previousKeyframe.Value;
+                        }
+                        else
+                        {
+                            switch (previousKeyframe.Mode)
+                            {
+                                case KeyframeMode.LINEAR:
+                                    double m = (nextKeyframe.Value - previousKeyframe.Value) / (nextKeyframe.Frame - previousKeyframe.Frame);
+                                    value = previousKeyframe.Value + (frame - previousKeyframe.Frame) * m;
+                                    break;
+                                case KeyframeMode.HOLD:
+                                    value = previousKeyframe.Value;
+                                    break;
+                            }
+                        }
                     }
                     else
                     {
-                        switch (pK.Mode)
-                        {
-                            case KeyframeMode.LINEAR:
-                                double m = (nK.Value - pK.Value) / (nK.Frame - pK.Frame);
-                                value = pK.Value + (frame - pK.Frame) * m;
-                                break;
-                            case KeyframeMode.HOLD:
-                                value = pK.Value;
-                                break;
-                        }
+                        value = k.Value;
                     }
-                }
-                else
-                {
-                    value = k.Value;
-                }
 
-                setPropertyValue(a, ap.PropertyName, value);
+                    pm.RenderValuePercentage = value;
 
+                }
             }
         }
 
-        private void setPropertyValue(IAnimatable a, string propertyName, double value)
+        private void applyControllers(IAnimatable a, int frame)
         {
-            PropertyInfo pi = a.GetType().GetProperty(propertyName);
-
-            if (pi == null)
-                return;
-
-            if (pi.PropertyType == typeof(int))
+            foreach (PropertyModel pm in a.AnimatableProperties)
             {
-                pi.SetValue(a, Convert.ToInt32(value));
-            } else if (pi.PropertyType == typeof(bool))
-            {
-                pi.SetValue(a, value > 0.5 ? true : false);
-            } else if (pi.PropertyType == typeof(double))
-            {
-                pi.SetValue(a, value);
+                if (pm.Controller != null)
+                {
+                    applyControllers(pm.Controller, frame);
+                    pm.RenderValuePercentage = pm.Controller.GetValueAt(frame);
+                }
             }
         }
         #endregion
@@ -648,49 +590,22 @@ namespace LedMusic.Viewmodels
         #region Commands
         private void cmdAnimate_Execute(string propertyName)
         {
-
-            PropertyInfo pi = CurrentAnimatable.GetType().GetProperty(propertyName);
-            if (pi == null)
-                return;
-
-            double value = Convert.ToDouble(pi.GetValue(CurrentAnimatable));
-
-            bool log = false;
-            double minValue = 0;
-            double maxValue = 0;
-
-            foreach (PropertyModel pm in CurrentAnimatable.AnimatableProperties)
-            {
-                if (pm.Name == propertyName)
-                {
-                    log = pm.Logarithmic;
-                    minValue = pm.MinValue;
-                    maxValue = pm.MaxValue;
-                }
-            }
-
-            CurrentAnimatable.AnimatedProperties.Add(new AnimatedProperty(propertyName, new Keyframe(CurrentFrame, value), minValue, maxValue, log));
-
+            PropertyModel pm = CurrentAnimatable.AnimatableProperties.GetProperty(propertyName);
+            pm.Keyframes.Add(new Keyframe(CurrentFrame, pm.PercentageValue));
         }
 
         private bool cmdAnimate_CanExecute(string propertyName)
         {
-            return !isPropertyAnimated(propertyName, CurrentAnimatable.AnimatedProperties) && !hasController(propertyName);
+            if (propertyName == null || CurrentAnimatable == null)
+                return false;
+
+            PropertyModel pm = CurrentAnimatable.AnimatableProperties.GetProperty(propertyName);
+            return pm != null && !isPropertyAnimated(pm) && pm.Controller == null;
         }
 
         private void cmdRemoveAnimation_Execute(string propertyName)
         {
-            AnimatedProperty toRemove = null;
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
-            {
-                if (ap.PropertyName == propertyName)
-                {
-                    toRemove = ap;
-                    break;
-                }
-            }
-            if (toRemove != null)
-                CurrentAnimatable.AnimatedProperties.Remove(toRemove);
+            CurrentAnimatable.AnimatableProperties.GetProperty(propertyName).Keyframes.Clear();
         }
 
         private async void cmdOpenMusicFile_Execute()
@@ -726,70 +641,30 @@ namespace LedMusic.Viewmodels
         private void cmdEditController_Execute(string propertyName)
         {
 
-            if (!hasController(propertyName))
+            PropertyModel pm = CurrentAnimatable.AnimatableProperties.GetProperty(propertyName);
+
+            if (pm.Controller == null)
             {
                 ChooseControllerWindow ccw = new ChooseControllerWindow();
                 ccw.DataContext = this;
                 if (ccw.ShowDialog() == false)
                     return;
 
-                IController c = (IController)Activator.CreateInstance(
+                ControllerBase c = (ControllerBase)Activator.CreateInstance(
                         Type.GetType("LedMusic.Controller." + ccw.lbControllers.SelectedItem));
-                PropertyModel p = getPropertyByName(CurrentAnimatable.AnimatableProperties, propertyName);
-                c.initialize(p.Name, p.MinValue, p.MaxValue);
+                pm.Controller = c;
 
-                CurrentAnimatable.Controllers.Add(c);
-                CurrentAnimatable = (IAnimatable)c;
+                CurrentAnimatable = c;
             } else
             {
-                IController c;
-                getControllerReference(propertyName, out c);
-                CurrentAnimatable = (IAnimatable)c;
+                CurrentAnimatable = pm.Controller;
             }
 
         }
 
         private void cmdRemoveController_Execute(string propertyName)
         {
-            IController c = null;
-            getControllerReference(propertyName, out c);
-            if (c != null)
-                CurrentAnimatable.Controllers.Remove(c);
-        }
-
-        private PropertyModel getPropertyByName(IEnumerable<PropertyModel> properties, string propertyName)
-        {
-            foreach (PropertyModel pm in properties)
-            {
-                if (pm.Name == propertyName)
-                    return pm;
-            }
-            return null;
-        }
-
-        private bool hasController(string propertyName)
-        {
-
-            IController c = null;
-            getControllerReference(propertyName, out c);
-            return c != null;
-
-        }
-
-        private void getControllerReference(string propertyName, out IController controller)
-        {
-
-            foreach (IController c in CurrentAnimatable.Controllers)
-            {
-                if (c.PropertyName == propertyName)
-                {
-                    controller = c;
-                    return;
-                }
-            }
-
-            controller = null;
-
+            CurrentAnimatable.AnimatableProperties.GetProperty(propertyName).Controller = null;
         }
 
         private void cmdAddLayer_Execute()
@@ -938,9 +813,9 @@ namespace LedMusic.Viewmodels
             if (CurrentAnimatable == null)
                 return;
 
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
+            foreach (PropertyModel pm in CurrentAnimatable.AnimatableProperties)
             {
-                foreach (Keyframe k in ap.Keyframes)
+                foreach (Keyframe k in pm.Keyframes)
                 {
                     if (k.IsSelected)
                     {
@@ -957,7 +832,7 @@ namespace LedMusic.Viewmodels
             if (CurrentAnimatable == null)
                 return;
 
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
+            foreach (PropertyModel ap in CurrentAnimatable.AnimatableProperties)
             {
                 foreach (Keyframe k in ap.Keyframes)
                 {
@@ -978,7 +853,7 @@ namespace LedMusic.Viewmodels
         public void SelectKeyframeRange()
         {
 
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
+            foreach (PropertyModel ap in CurrentAnimatable.AnimatableProperties)
             {
                 //find first and last Keyframe and select all Keyframes in between them
                 ap.Keyframes.Sort();
@@ -1001,25 +876,14 @@ namespace LedMusic.Viewmodels
 
         public void DeleteKeyframes()
         {
-
-            List<AnimatedProperty> toRemoveAP = new List<AnimatedProperty>();
-
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
+            foreach (PropertyModel pm in CurrentAnimatable.AnimatableProperties)
             {
-                List<Keyframe> toRemove = ap.Keyframes.Where((k) => { return k.IsSelected; }).ToList();
+                List<Keyframe> toRemove = pm.Keyframes.Where((k) => { return k.IsSelected; }).ToList();
                 foreach (Keyframe k in toRemove)
                 {
-                    ap.Keyframes.Remove(k);
+                    pm.Keyframes.Remove(k);
                 }
-                if (ap.Keyframes.Count == 0)
-                    toRemoveAP.Add(ap);
             }
-
-            foreach (AnimatedProperty ap in toRemoveAP)
-            {
-                CurrentAnimatable.AnimatedProperties.Remove(ap);
-            }
-
         }
 
         public void CopyKeyframes()
@@ -1028,16 +892,16 @@ namespace LedMusic.Viewmodels
             clipboard.Clear();
             copyFrame = CurrentFrame;
             
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
+            foreach (PropertyModel pm in CurrentAnimatable.AnimatableProperties)
             {
                 List<Keyframe> tempList = new List<Keyframe>();
-                foreach (Keyframe k in ap.Keyframes)
+                foreach (Keyframe k in pm.Keyframes)
                 {
                     if (k.IsSelected)
                         tempList.Add(k.Copy());
                 }
                 if (tempList.Count > 0)
-                    clipboard.Add(ap.PropertyName, tempList);
+                    clipboard.Add(pm.Name, tempList);
             }
 
         }
@@ -1047,20 +911,20 @@ namespace LedMusic.Viewmodels
 
             int delta = CurrentFrame - copyFrame;
 
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
+            foreach (PropertyModel pm in CurrentAnimatable.AnimatableProperties)
             {
-                if (clipboard.ContainsKey(ap.PropertyName))
+                if (clipboard.ContainsKey(pm.Name))
                 {
-                    foreach (Keyframe k in clipboard[ap.PropertyName])
+                    foreach (Keyframe k in clipboard[pm.Name])
                     {
-                        Keyframe kf = ap.Keyframes.FirstOrDefault(lkf => lkf.Frame == k.Frame);
+                        Keyframe kf = pm.Keyframes.FirstOrDefault(lkf => lkf.Frame == k.Frame);
                         k.Frame += delta;
                         if (kf != null)
                         {
                             kf.Value = k.Value;
                         } else
                         {
-                            ap.Keyframes.Add(k.Copy());
+                            pm.Keyframes.Add(k.Copy());
                         }
                     }
                 }
@@ -1074,10 +938,10 @@ namespace LedMusic.Viewmodels
             if (CurrentAnimatable == null)
                 return false;
 
-            foreach (AnimatedProperty ap in CurrentAnimatable.AnimatedProperties)
+            foreach (PropertyModel pm in CurrentAnimatable.AnimatableProperties)
             {
                 bool hasSelectedKeyframe = false;
-                foreach (Keyframe k in ap.Keyframes)
+                foreach (Keyframe k in pm.Keyframes)
                 {
                     if (k.IsSelected)
                     {

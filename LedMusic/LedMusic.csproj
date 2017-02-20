@@ -67,6 +67,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <None Include="BassEngine.cs" />
+    <Compile Include="Controller\ControllerBase.cs" />
+    <Compile Include="Interfaces\IAnimatable.cs" />
+    <Compile Include="Models\WaveformModel.cs" />
     <Compile Include="SoundEngine.cs" />
     <Compile Include="Views\ChooseControllerWindow.xaml.cs">
       <DependentUpon>ChooseControllerWindow.xaml</DependentUpon>
@@ -85,13 +88,10 @@
     <Compile Include="Generators\StripGenerator.cs" />
     <Compile Include="GlobalProperties.cs" />
     <Compile Include="Helpers\EnumerationExtension.cs" />
-    <Compile Include="Interfaces\IAnimatable.cs" />
-    <Compile Include="Interfaces\IController.cs" />
     <Compile Include="Views\KeyframeTrack.xaml.cs">
       <DependentUpon>KeyframeTrack.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\AnimatedProperty.cs" />
-    <Compile Include="Models\BeatAnimatable.cs" />
+    <None Include="Models\BeatAnimatable.cs" />
     <Compile Include="Models\Enums.cs" />
     <Compile Include="Models\Keyframe.cs" />
     <Compile Include="Controller\LFO.cs" />
@@ -107,7 +107,6 @@
     </Compile>
     <Compile Include="StaticStuff\BeatHelper.cs" />
     <Compile Include="StaticStuff\Extensions.cs" />
-    <Compile Include="StaticStuff\PropertiesHelper.cs" />
     <Compile Include="Viewmodels\MainModel.cs" />
     <Compile Include="Views\Waveform.xaml.cs">
       <DependentUpon>Waveform.xaml</DependentUpon>
@@ -132,7 +131,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Helpers\AnimatableAttribute.cs" />
+    <None Include="Helpers\AnimatableAttribute.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -171,7 +170,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

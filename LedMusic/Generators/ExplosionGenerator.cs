@@ -4,10 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LedMusic.Generators
 {
@@ -19,28 +16,6 @@ namespace LedMusic.Generators
         public void NotifyPropertyChanged([CallerMemberName] string name = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        private ObservableCollection<AnimatedProperty> _animatedProperties = new ObservableCollection<AnimatedProperty>();
-        public ObservableCollection<AnimatedProperty> AnimatedProperties
-        {
-            get { return _animatedProperties; }
-            set
-            {
-                _animatedProperties = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private ObservableCollection<IController> _controllers = new ObservableCollection<IController>();
-        public ObservableCollection<IController> Controllers
-        {
-            get { return _controllers; }
-            set
-            {
-                _controllers = value;
-                NotifyPropertyChanged();
-            }
         }
 
         private ObservableCollection<PropertyModel> _animatableProperties = new ObservableCollection<PropertyModel>();
@@ -55,9 +30,6 @@ namespace LedMusic.Generators
         }
 
         public string GeneratorName { get { return "Explosion"; } }
-
-        public Guid _id = Guid.NewGuid();
-        public Guid Id { get { return _id; } }
 
         private List<Particle> particles = new List<Particle>();
 

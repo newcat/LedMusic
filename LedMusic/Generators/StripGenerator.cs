@@ -1,13 +1,9 @@
 ﻿using LedMusic.Interfaces;
 using LedMusic.Models;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LedMusic.Generators
 {
@@ -33,123 +29,49 @@ namespace LedMusic.Generators
             }
         }
 
-        private ObservableCollection<AnimatedProperty> _animatedProperties = new ObservableCollection<AnimatedProperty>();
-        public ObservableCollection<AnimatedProperty> AnimatedProperties
-        {
-            get { return _animatedProperties; }
-            set
-            {
-                _animatedProperties = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private ObservableCollection<IController> _controllers = new ObservableCollection<IController>();
-        public ObservableCollection<IController> Controllers
-        {
-            get { return _controllers; }
-            set
-            {
-                _controllers = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private Guid _id = Guid.NewGuid();
-        public Guid Id
-        {
-            get { return _id; }
-        }
-
         public string GeneratorName { get { return "Strip"; } }
 
-        private int _startLED = 0;
-        [Animatable()]
-        public int StartLED
-        {
-            get { return _startLED; }
-            set
-            {
-                _startLED = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public int StartLED_MinValue { get { return 0; } }
-        public int StartLED_MaxValue { get { return GlobalProperties.Instance.LedCount - 1; } }
+        public StripGenerator() {
 
-        private int _endLED = 0;
-        [Animatable()]
-        public int EndLED
-        {
-            get { return _endLED; }
-            set
-            {
-                _endLED = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public int EndLED_MinValue { get { return 0; } }
-        public int EndLED_MaxValue { get { return GlobalProperties.Instance.LedCount - 1; } }
+            PropertyModel p = new PropertyModel("Start LED", 0, GlobalProperties.Instance.LedCount - 1);
+            p.SetToStringFunc((d) => "LED #" + ((int)d + 1));
+            AnimatableProperties.Add(p);
 
-        private double _alpha = 1d;
-        [Animatable(0d, 1d)]
-        public double Alpha
-        {
-            get { return _alpha; }
-            set
-            {
-                _alpha = value;
-                NotifyPropertyChanged();
-            }
-        }
+            p = new PropertyModel("End LED", 0, GlobalProperties.Instance.LedCount - 1);
+            p.SetToStringFunc((d) => "LED #" + ((int)d + 1));
+            AnimatableProperties.Add(p);
 
-        private double _hue = 0;
-        [Animatable(0d, 360d)]
-        public double Hue
-        {
-            get { return _hue; }
-            set
-            {
-                _hue = value;
-                NotifyPropertyChanged();
-            }
-        }
+            p = new PropertyModel("Alpha", 0, 1);
+            AnimatableProperties.Add(p);
 
-        private double _saturation = 0;
-        [Animatable(0d, 1d)]
-        public double Saturation
-        {
-            get { return _saturation; }
-            set
-            {
-                _saturation = value;
-                NotifyPropertyChanged();
-            }
-        }
+            p = new PropertyModel("Hue", 0, 360);
+            AnimatableProperties.Add(p);
 
-        private double _value = 0;
-        [Animatable(0d, 1d)]
-        public double Value
-        {
-            get { return _value; }
-            set
-            {
-                _value = value;
-                NotifyPropertyChanged();
-            }
-        }
+            p = new PropertyModel("Saturation", 0, 1);
+            AnimatableProperties.Add(p);
 
-        public StripGenerator() { }
+            p = new PropertyModel("Value", 0, 1);
+            AnimatableProperties.Add(p);
+
+        }
 
         public Color[] getSample(int frame)
         {
 
             Color[] sample = new Color[GlobalProperties.Instance.LedCount];
 
-            for (int i = StartLED; i <= EndLED; i++)
+            double alpha = AnimatableProperties.GetProperty("Alpha").RenderValue;
+            double hue = AnimatableProperties.GetProperty("Hue").RenderValue;
+            double saturation = AnimatableProperties.GetProperty("Saturation").RenderValue;
+            double value = AnimatableProperties.GetProperty("Value").RenderValue;
+
+            int startLED = (int)AnimatableProperties.GetProperty("Start LED").RenderValue;
+            int endLED = (int)AnimatableProperties.GetProperty("End LED").RenderValue;
+
+            for (int i = startLED; i <= endLED; i++)
             {
-                if (StartLED >= 0 && EndLED < sample.Length)
-                    sample[i] = new ColorHSV(Hue, Saturation, Alpha * Value);
+                if (startLED >= 0 && endLED < sample.Length)
+                    sample[i] = new ColorHSV(hue, saturation, alpha * value);
             }
 
             return sample;

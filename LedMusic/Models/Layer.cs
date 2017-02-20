@@ -1,5 +1,4 @@
 ﻿using LedMusic.Interfaces;
-using LedMusic.StaticStuff;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -81,7 +80,6 @@ namespace LedMusic.Models
             LayerNumber = layerNumber;
             LayerName = "Layer " + LayerNumber.ToString();
             IAnimatable a = (IAnimatable)generator;
-            PropertiesHelper.updateAnimatableProperties(ref a);
             Generator = (IGenerator)a;
         }
 

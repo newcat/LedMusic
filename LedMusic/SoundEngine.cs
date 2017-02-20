@@ -4,7 +4,7 @@ using CSCore.CoreAudioAPI;
 using CSCore.DSP;
 using CSCore.SoundOut;
 using CSCore.Streams;
-using LedMusic.Viewmodels;
+using LedMusic.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -39,7 +39,7 @@ namespace LedMusic
             }
         }
 
-        private int _volume = 80;
+        private int _volume = 50;
         public int Volume
         {
             get { return _volume; }
@@ -98,6 +98,7 @@ namespace LedMusic
             {
                 if (waveSource != null && value.TotalMilliseconds >= 0 && value < Length)
                     waveSource.SetPosition(value);
+                NotifyPropertyChanged();
             }
         }
 
@@ -111,13 +112,13 @@ namespace LedMusic
             }
         }
 
-        private List<float> _samples = new List<float>();
-        public List<float> Samples
+        private WaveformModel _waveformModel = new WaveformModel();
+        public WaveformModel WaveformModel
         {
-            get { return _samples; }
+            get { return _waveformModel; }
             set
             {
-                _samples = value;
+                _waveformModel = value;
                 NotifyPropertyChanged();
             }
         }
@@ -181,7 +182,12 @@ namespace LedMusic
 
             File = filename;
 
-            waveSource = CodecFactory.Instance.GetCodec(filename).ToSampleSource().ToWaveSource();
+            var src = CodecFactory.Instance.GetCodec(filename).ToSampleSource();
+
+            var notificationSource = new SingleBlockNotificationStream(src);
+            notificationSource.SingleBlockRead += (s, e) => fftProvider.Add(e.Left, e.Right);
+            
+            waveSource = notificationSource.ToWaveSource();
 
             if (!waveSource.CanSeek)
             {
@@ -194,15 +200,14 @@ namespace LedMusic
             soundOut.Stopped += SoundOut_Stopped;
             Volume = _volume;
 
-            //var notificationSource = new SingleBlockNotificationStream(waveSource.ToSampleSource());
-            //notificationSource.SingleBlockRead += (s, e) => fftProvider.Add(e.Left, e.Right);
-
             buildingWaveform = true;
             ISampleSource sampleBuildingSource = CodecFactory.Instance.GetCodec(filename).ToSampleSource().ToMono();
             await Task.Run(() => createSampleList(sampleBuildingSource));
             buildingWaveform = false;
 
-            soundOut.Play();
+            NotifyPropertyChanged("CanPlay");
+            NotifyPropertyChanged("CanPause");
+            NotifyPropertyChanged("CanStop");
 
             return true;
 
@@ -217,13 +222,23 @@ namespace LedMusic
         public void Play()
         {
             if (CanPlay)
+            {
                 soundOut.Play();
+                NotifyPropertyChanged("CanPlay");
+                NotifyPropertyChanged("CanPause");
+                NotifyPropertyChanged("CanStop");
+            }
         }
 
         public void Pause()
         {
             if (CanPause)
+            {
                 soundOut.Pause();
+                NotifyPropertyChanged("CanPlay");
+                NotifyPropertyChanged("CanPause");
+                NotifyPropertyChanged("CanStop");
+            }
         }
 
         public void Stop()
@@ -232,6 +247,10 @@ namespace LedMusic
             {
                 soundOut.Stop();
                 waveSource.SetPosition(TimeSpan.Zero);
+                NotifyPropertyChanged("Position");
+                NotifyPropertyChanged("CanPlay");
+                NotifyPropertyChanged("CanPause");
+                NotifyPropertyChanged("CanStop");
             }
         }
 
@@ -244,8 +263,8 @@ namespace LedMusic
 
             int sampleNumber = (int)Math.Floor((currentTime * waveSource.WaveFormat.SampleRate) / BLOCK_SIZE);
 
-            if (sampleNumber >= 0 && sampleNumber < Samples.Count)
-                return Samples[sampleNumber];
+            if (sampleNumber >= 0 && sampleNumber < WaveformModel.Samples.Length)
+                return WaveformModel.Samples[sampleNumber];
             else
                 return 0f;
 
@@ -253,6 +272,9 @@ namespace LedMusic
 
         public int GetFftBandIndex(float frequency)
         {
+            if (waveSource == null)
+                return -1;
+
             int fftSize = (int)FFT_SIZE;
             double f = waveSource.WaveFormat.SampleRate / 2.0;
             return (int)((frequency / f) * (fftSize / 2));
@@ -262,7 +284,7 @@ namespace LedMusic
         {
             if (!fftProvider.GetFftData(currentFfTData))
             {
-                Debug.WriteLine("GetFftData returned false");
+                //TODO: Debug.WriteLine("GetFftData returned false");
             }
         }
 
@@ -301,9 +323,11 @@ namespace LedMusic
             if (sampleSource == null)
                 throw new ArgumentNullException("sampleSource");
 
-            var newSamples = new List<float>();
+            var newSamples = new float[sampleSource.Length / BLOCK_SIZE + 2];
             var buffer = new float[BLOCK_SIZE];
             float blockMaxValue;
+
+            int x = 0;
 
             while (sampleSource.Read(buffer, 0, BLOCK_SIZE) > 0)
             {
@@ -313,10 +337,15 @@ namespace LedMusic
                     if (Math.Abs(buffer[i]) > blockMaxValue)
                         blockMaxValue = Math.Abs(buffer[i]);
                 }
-                newSamples.Add(blockMaxValue);
+                newSamples[x] = blockMaxValue;
+
+                x++;
+                if (x % 500 == 0)
+                    WaveformModel.Samples = newSamples;
+
             }
 
-            Samples = newSamples;
+            WaveformModel.Samples = newSamples;
 
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using LedMusic.Models;
+using LedMusic.Interfaces;
 
 namespace LedMusic
 {
@@ -13,6 +14,11 @@ namespace LedMusic
             List<T> sorted = collection.OrderBy(x => x).ToList();
             for (int i = 0; i < sorted.Count(); i++)
                 collection.Move(collection.IndexOf(sorted[i]), i);
+        }
+
+        public static PropertyModel GetProperty<T>(this ObservableCollection<T> collection, string propertyName) where T : PropertyModel
+        {
+            return collection.FirstOrDefault((p) => p.Name == propertyName);
         }
 
         public static ColorRGB Overlay(this ColorRGB a, ColorRGB b)

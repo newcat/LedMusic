@@ -1,6 +1,8 @@
-﻿using System;
+﻿using LedMusic.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -22,34 +24,36 @@ namespace LedMusic.Views
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public List<float> Samples
+        public WaveformModel WaveformModel
         {
-            get { return (List<float>)GetValue(SamplesProperty); }
-            set { SetValue(SamplesProperty, value); }
+            get { return (WaveformModel)GetValue(WaveformModelProperty); }
+            set { SetValue(WaveformModelProperty, value); }
         }
-        public static readonly DependencyProperty SamplesProperty =
-            DependencyProperty.Register("Samples", typeof(List<float>), typeof(Waveform));
-
+        public static readonly DependencyProperty WaveformModelProperty = DependencyProperty.Register(
+                "WaveformModel", typeof(WaveformModel), typeof(Waveform));
 
         public Waveform()
         {
-
-            DependencyPropertyDescriptor
-                .FromProperty(SamplesProperty, typeof(Waveform))
-                .AddValueChanged(this, (s, e) => NotifyPropertyChanged("Samples"));
-
             InitializeComponent();
-            PropertyChanged += Waveform_PropertyChanged;
+
+            var desc = DependencyPropertyDescriptor.FromProperty(WaveformModelProperty, typeof(Waveform));
+            if (desc != null)
+                desc.AddValueChanged(this, (s, e) => {
+                    if (WaveformModel != null)
+                        WaveformModel.PropertyChanged += WaveformModel_PropertyChanged;
+                    });
         }
 
-        private async void Waveform_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async void WaveformModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "Samples")
                 await updateWaveformAsync();
         }
 
-        private async Task updateWaveformAsync()
+        public async Task updateWaveformAsync()
         {
+
+            Debug.WriteLine("Redrawing waveform");
 
             if (!Dispatcher.CheckAccess())
             {
@@ -60,7 +64,7 @@ namespace LedMusic.Views
             List<Point> points = new List<Point>();
             double centerHeight = PART_Canvas.RenderSize.Height / 2d;
             double canvasWidth = PART_Canvas.RenderSize.Width;
-            int sampleCount = Samples.Count();
+            int sampleCount = WaveformModel.Samples.Length;
             float value = 0;
 
             if (canvasWidth == 0 || sampleCount == 0)
@@ -71,13 +75,13 @@ namespace LedMusic.Views
 
             for (int x = 0; x < canvasWidth; x++)
             {
-                value = Samples[(int)Math.Floor(x * sampleCount / canvasWidth)];
+                value = WaveformModel.Samples[(int)Math.Floor(x * sampleCount / canvasWidth)];
                 points.Add(new Point(x, centerHeight + value * centerHeight));
             }
 
             for (int x = (int)canvasWidth - 1; x >= 0; x--)
             {
-                value = Samples[(int)Math.Floor(x * sampleCount / canvasWidth)];
+                value = WaveformModel.Samples[(int)Math.Floor(x * sampleCount / canvasWidth)];
                 points.Add(new Point(x, centerHeight - value * centerHeight));
             }
 

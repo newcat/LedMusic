@@ -9,6 +9,8 @@
         xmlns:vm="clr-namespace:LedMusic.Viewmodels"
         xmlns:model="clr-namespace:LedMusic.Models"
         xmlns:view="clr-namespace:LedMusic.Views"
+        xmlns:interfaces="clr-namespace:LedMusic.Interfaces"
+        xmlns:controller="clr-namespace:LedMusic.Controller"
         mc:Ignorable="d"
         Title="MainWindow" Height="700" Width="1000" MinWidth="865" MinHeight="700" Loaded="Window_Loaded" >
 
@@ -19,6 +21,26 @@
         </LinearGradientBrush>
         <conv:WidthToRectConverter x:Key="WidthToRectConverter" />
         <conv:OffsetRectConverter x:Key="OffsetRectConverter" />
+
+        <ContextMenu x:Key="PropertyContextMenu">
+            <MenuItem Header="Animate" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdAnimate}"
+                                                          CommandParameter="{Binding Name}"/>
+            <MenuItem Header="Remove Animation" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdRemoveAnimation}"
+                                                          CommandParameter="{Binding Name}"/>
+            <MenuItem Header="Edit Controller" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdEditController}"
+                                                          CommandParameter="{Binding Name}"/>
+            <MenuItem Header="Remove Controller" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdRemoveController}"
+                                                          CommandParameter="{Binding Name}"/>
+        </ContextMenu>
+
+        <ContextMenu x:Key="LayerContextMenu">
+            <MenuItem Header="Add Layer" Command="{Binding CmdAddLayer}" />
+            <MenuItem Header="Remove Layer" Command="{Binding CmdRemoveLayer}" />
+            <MenuItem Header="Rename Layer" Command="{Binding CmdRenameLayer}" />
+            <MenuItem Header="Move Layer Up" Command="{Binding CmdMoveLayerUp}" />
+            <MenuItem Header="Move Layer Down" Command="{Binding CmdMoveLayerDown}" />
+        </ContextMenu>
+
     </Window.Resources>
 
     <Window.CommandBindings>
@@ -45,51 +67,18 @@
                 <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="330"/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="225"/>
+                <ColumnDefinition Width="270*"/>
+                <ColumnDefinition Width="497*"/>
             </Grid.ColumnDefinitions>
 
-            <GroupBox x:Name="gbProjectSettings" Header="Project Settings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="180" Width="310">
-                <Grid HorizontalAlignment="Stretch" Margin="0" VerticalAlignment="Stretch" >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="4*"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
-                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="LED Count" VerticalAlignment="Top" Grid.Column="0"/>
-                    <Slider x:Name="sliderLedCount" Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="150" Minimum="1" Maximum="200" SmallChange="1" Value="{Binding Path=LedCount, Mode=TwoWay}" IsSnapToTickEnabled="True" />
-                    <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="{Binding ElementName=sliderLedCount, Path=Value}" VerticalAlignment="Top"/>
+            <ScrollViewer x:Name="scrollViewer" Margin="4,10,10,10" Grid.Row="2" KeyDown="canvas_KeyDown" Focusable="True"
+                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ScrollChanged="scrollViewer_ScrollChanged" Grid.Column="1" Grid.ColumnSpan="2">
 
-                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" TextWrapping="Wrap" Text="FPS" VerticalAlignment="Top"/>
-                    <Slider x:Name="sliderFPS" Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="150" Minimum="10" Maximum="60" SmallChange="0" Value="{Binding Path=FPS, Mode=TwoWay}" IsSnapToTickEnabled="True" />
-                    <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" TextWrapping="Wrap" Text="{Binding ElementName=sliderFPS, Path=Value}" VerticalAlignment="Top"/>
-
-                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" TextWrapping="Wrap" Text="BPM" VerticalAlignment="Top"/>
-                    <Slider x:Name="sliderBPM" Grid.Column="1" Grid.Row="2" Margin="10,10,10,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Minimum="60" Maximum="200" Value="{Binding Path=BPM, Mode=TwoWay}" TickFrequency="0.5" IsSnapToTickEnabled="True" />
-                    <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding ElementName=sliderBPM, Path=Value}" VerticalAlignment="Top"/>
-
-                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" TextWrapping="Wrap" Text="Beat offset" VerticalAlignment="Top"/>
-                    <Slider x:Name="sliderBeatOffset" Grid.Column="1" Grid.Row="3" Margin="10,10,10,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Minimum="0" Maximum="4" Value="{Binding Path=BeatOffset, Mode=TwoWay}" TickFrequency="0.1" IsSnapToTickEnabled="True" />
-                    <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" TextWrapping="Wrap" Text="{Binding ElementName=sliderBeatOffset, Path=Value}" VerticalAlignment="Top"/>
-
-                    <Canvas Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Background="{Binding BeatIndicatorBackground}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5" />
-                </Grid>
-            </GroupBox>
-
-            <ScrollViewer x:Name="scrollViewer" Margin="212,10,10,10" Grid.Row="2" Grid.ColumnSpan="2" KeyDown="canvas_KeyDown" Focusable="True"
-                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ScrollChanged="scrollViewer_ScrollChanged">
-                
                 <Canvas x:Name="canvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="{Binding TrackWidth}"
                         MouseLeftButtonDown="canvas_MouseLeftButtonDown"
                         Height="{Binding ElementName=canvasGrid, Path=ActualHeight, Mode=OneWay}">
-                    
+
                     <Canvas.Background>
                         <VisualBrush Stretch="Uniform" ViewportUnits="Absolute" ViewboxUnits="Absolute" TileMode="Tile"
                                      Viewbox="{Binding GridLineDistance, Converter={StaticResource WidthToRectConverter}}">
@@ -118,31 +107,10 @@
 
                         <Canvas Width="{Binding TrackWidth}" Height="30" Background="Gray" Grid.Row="0"/>
 
-                        <!--<svl:WaveformTimeline x:Name="waveformTimeline" HorizontalAlignment="Left" VerticalAlignment="Top" Height="100" Width="{Binding TrackWidth}" AutoScaleWaveformCache="True"
-                                          Background="#88000000" RightLevelBrush="{StaticResource WaveformBrush}" LeftLevelBrush="{StaticResource WaveformBrush}" Grid.Row="1">
-                            <svl:WaveformTimeline.Style>
-                                <Style TargetType="svl:WaveformTimeline">
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="svl:WaveformTimeline">
-                                                <Border Background="{TemplateBinding Background}" BorderBrush="{x:Null}">
-                                                    <Grid>
-                                                        <Canvas Name="PART_Waveform" ClipToBounds="True" />
-                                                        <Canvas Name="PART_Timeline" ClipToBounds="True" Height="0" />
-                                                        <Canvas Name="PART_Repeat" ClipToBounds="True" Height="0"/>
-                                                        <Canvas Name="PART_Progress" ClipToBounds="True" Height="0" />
-                                                    </Grid>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </svl:WaveformTimeline.Style>
-                        </svl:WaveformTimeline>-->
-
                         <view:Waveform x:Name="wvfTimeline" HorizontalAlignment="Left" VerticalAlignment="Top" Height="100" Width="{Binding TrackWidth}"
-                                       Grid.Row="1" Background="#88000000" Samples="{Binding Samples, Source={x:Static local:SoundEngine.Instance}}" />
+                                       Grid.Row="1" Background="#88000000" WaveformModel="{Binding WaveformModel, Source={x:Static local:SoundEngine.Instance}}" />
 
+                        <!-- TODO -->
                         <ItemsControl ItemsSource="{Binding CurrentAnimatable.AnimatedProperties}" Grid.Row="2">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -160,37 +128,35 @@
 
             <Button x:Name="btnOpen" Content="Open music" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Height="20" Command="{Binding CmdOpenMusicFile}" Focusable="False"/>
             <Button x:Name="btnPlay" Content="Play" HorizontalAlignment="Left" Margin="90,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Height="20" Command="{Binding CmdPlay}" Focusable="False"/>
-            <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Margin="170,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdPause}" Focusable="False"/>
-            <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="250,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdStop}" Focusable="False"/>
+            <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Margin="170,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdPause}" Focusable="False" Height="20" Grid.ColumnSpan="2"/>
+            <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="20,10,0,0" Grid.Row="3" VerticalAlignment="Top" Width="75" Command="{Binding CmdStop}" Focusable="False" Height="20" Grid.Column="1"/>
 
 
-            <Canvas x:Name="previewStrip" Height="20" Margin="10,10,10,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <Canvas x:Name="previewStrip" Height="20" Margin="10,10,10,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2" Grid.Column="1" >
                 <Canvas.Background>
                     <LinearGradientBrush GradientStops="{Binding StripPreview}" />
                 </Canvas.Background>
             </Canvas>
 
-            <ListView x:Name="lvLayers" HorizontalAlignment="Left" Margin="10,10,0,200" Grid.Row="2" Width="197" ItemsSource="{Binding Layers}" SelectionMode="Single" SelectionChanged="lvLayers_SelectionChanged"
-                      SelectedItem="{Binding CurrentLayer, Mode=TwoWay}">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding LayerName}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Add Layer" Command="{Binding CmdAddLayer}" />
-                        <MenuItem Header="Remove Layer" Command="{Binding CmdRemoveLayer}" />
-                        <MenuItem Header="Rename Layer" Command="{Binding CmdRenameLayer}" />
-                        <MenuItem Header="Move Layer Up" Command="{Binding CmdMoveLayerUp}" />
-                        <MenuItem Header="Move Layer Down" Command="{Binding CmdMoveLayerDown}" />
-                    </ContextMenu>
-                </ListView.ContextMenu>
-            </ListView>
+            <TreeView x:Name="lvLayers" HorizontalAlignment="Left" Margin="10,10,0,200" Width="197" Grid.RowSpan="3" ItemsSource="{Binding Layers}"
+                      ContextMenu="{StaticResource LayerContextMenu}" SelectedItemChanged="lvLayers_SelectedItemChanged" SelectedValuePath="Generator">
 
-            <!--<view:Knob Height="50" Width="50" Grid.Column="1" Panel.ZIndex="2" />-->
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type model:Layer}" ItemsSource="{Binding Generator.AnimatableProperties}">
+                        <TextBlock Text="{Binding LayerName}" Margin="2" ContextMenu="{StaticResource LayerContextMenu}" />
+                    </HierarchicalDataTemplate>
 
-            <ListView x:Name="lvGeneratorSettigns" Grid.Column="1" Height="180" Margin="10,10,10,0" VerticalAlignment="Top" ItemsSource="{Binding CurrentAnimatable.AnimatableProperties}">
+                    <HierarchicalDataTemplate DataType="{x:Type model:PropertyModel}" ItemsSource="{Binding Controller}">
+                        <TextBlock Text="{Binding Name}" Margin="2" ContextMenu="{StaticResource PropertyContextMenu}" />
+                    </HierarchicalDataTemplate>
+
+                    <HierarchicalDataTemplate DataType="{x:Type controller:ControllerBase}" ItemsSource="{Binding AnimatableProperties}">
+                        <TextBlock Text="Controller" Margin="2" />
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+
+            <ListView x:Name="lvGeneratorSettigns" Grid.Column="1" Height="180" Margin="10,10,10,0" VerticalAlignment="Top" ItemsSource="{Binding CurrentAnimatable.AnimatableProperties}" Grid.ColumnSpan="2">
 
                 <ListView.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -203,29 +169,16 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListViewItem">
-                                    <Grid Margin="10,0,0,0" MinWidth="50">
+                                    <Grid Margin="10,0,0,0" MinWidth="50" ContextMenu="{StaticResource PropertyContextMenu}">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="1*"/>
                                             <RowDefinition Height="4*"/>
                                             <RowDefinition Height="1*"/>
                                         </Grid.RowDefinitions>
-                                        <TextBlock Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ElementName=sliderValue, Path=Value, StringFormat=N2}"/>
+                                        <TextBlock Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ValueString}"/>
                                         <Slider x:Name="sliderValue" Orientation="Vertical" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                                                Minimum="{Binding MinValue}" Maximum="{Binding MaxValue}" ValueChanged="sliderValue_ValueChanged" Value="{Binding CurrentValue, Mode=OneWay}"  />
+                                                Minimum="0" Maximum="1" ValueChanged="sliderValue_ValueChanged" Value="{Binding PercentageValue, Mode=OneWay}"  />
                                         <TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding Name}" />
-
-                                        <Grid.ContextMenu>
-                                            <ContextMenu>
-                                                <MenuItem Header="Animate" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdAnimate}"
-                                                          CommandParameter="{Binding Name}"/>
-                                                <MenuItem Header="Remove Animation" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdRemoveAnimation}"
-                                                          CommandParameter="{Binding Name}"/>
-                                                <MenuItem Header="Edit Controller" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdEditController}"
-                                                          CommandParameter="{Binding Name}"/>
-                                                <MenuItem Header="Remove Controller" Command="{Binding Source={x:Static vm:MainModel.Instance}, Path=CmdRemoveController}"
-                                                          CommandParameter="{Binding Name}"/>
-                                            </ContextMenu>
-                                        </Grid.ContextMenu>
                                     </Grid>
                                 </ControlTemplate>
                             </Setter.Value>
@@ -268,12 +221,12 @@
                 </Grid>
             </GroupBox>
 
-            <Button x:Name="btnDecreaseZoom" Content="-" Grid.Column="1" Margin="0,10,10,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnDecreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
-            <Button x:Name="btnIncreaseZoom" Content="+" Grid.Column="1" Margin="0,10,35,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnIncreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
-            <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" TextWrapping="Wrap" Text="{Binding CurrentFrame}" VerticalAlignment="Top" />
-            <ComboBox x:Name="combOutputDevice" Width="150" Height="20" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Margin="100,0,0,0" DisplayMemberPath="FriendlyName"
+            <Button x:Name="btnDecreaseZoom" Content="-" Grid.Column="2" Margin="0,10,10,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnDecreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
+            <Button x:Name="btnIncreaseZoom" Content="+" Grid.Column="2" Margin="0,10,35,0" Grid.Row="3" VerticalAlignment="Top" Height="20" Click="btnIncreaseZoom_Click" HorizontalAlignment="Right" Width="20" Focusable="False"/>
+            <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" TextWrapping="Wrap" Text="{Binding CurrentFrame}" VerticalAlignment="Top" Height="16" Width="0" />
+            <ComboBox x:Name="combOutputDevice" Width="150" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Margin="100,10,0,10" DisplayMemberPath="FriendlyName"
                       ItemsSource="{Binding Devices, Source={x:Static local:SoundEngine.Instance}}"/>
-            <Slider x:Name="sliderVolume" Width="150" Height="20" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Margin="270,0,0,0" Maximum="100"
+            <Slider x:Name="sliderVolume" Width="150" Grid.Row="3" Grid.Column="2" HorizontalAlignment="Left" Margin="24,10,0,10" Maximum="100"
                     Value="{Binding Volume, Source={x:Static local:SoundEngine.Instance}}"/>
 
         </Grid>

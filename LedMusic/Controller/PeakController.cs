@@ -1,145 +1,51 @@
-﻿using LedMusic.Interfaces;
-using LedMusic.Models;
+﻿using LedMusic.Models;
 using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace LedMusic.Controller
 {
     [Serializable()]
-    class PeakController : INotifyPropertyChanged, IAnimatable, IController
+    class PeakController : ControllerBase
     {
-        [field: NonSerialized]
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void NotifyPropertyChanged([CallerMemberName] string name = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        private ObservableCollection<AnimatedProperty> _animatedProperties = new ObservableCollection<AnimatedProperty>();
-        public ObservableCollection<AnimatedProperty> AnimatedProperties
-        {
-            get { return _animatedProperties; }
-            set
-            {
-                _animatedProperties = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private ObservableCollection<PropertyModel> _animatableProperties = new ObservableCollection<PropertyModel>();
-        public ObservableCollection<PropertyModel> AnimatableProperties
-        {
-            get { return _animatableProperties; }
-            set
-            {
-                _animatableProperties = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private ObservableCollection<IController> _controllers = new ObservableCollection<IController>();
-        public ObservableCollection<IController> Controllers
-        {
-            get { return _controllers; }
-            set
-            {
-                _controllers = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private string _propertyName = "";
-        public string PropertyName
-        {
-            get { return _propertyName; }
-            set
-            {
-                _propertyName = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double _amplitude;
-        [Animatable(0,1)]
-        public double Amplitude
-        {
-            get { return _amplitude; }
-            set
-            {
-                _amplitude = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double _lowerThreshold;
-        [Animatable(0, 1)]
-        public double LowerThreshold
-        {
-            get { return _lowerThreshold; }
-            set
-            {
-                _lowerThreshold = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double _upperThreshold;
-        [Animatable(0, 1)]
-        public double UpperThreshold
-        {
-            get { return _upperThreshold; }
-            set
-            {
-                _upperThreshold = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public Guid _id = Guid.NewGuid();
-        public Guid Id { get { return _id; } }
-
-        private double maxValue;
-        private double minValue;
 
         public PeakController()
         {
-            
+
+            PropertyModel p = new PropertyModel("Amplitude", 0, 1);
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Lower Threshold", 0, 1);
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Upper Threshold", 0, 1);
+            AnimatableProperties.Add(p);
+
         }
 
-        public void initialize(string propertyName, double minValue, double maxValue)
-        {
-            PropertyName = propertyName;
-            this.maxValue = maxValue;
-            this.minValue = minValue;
-        }
-
-        public double getValueAt(int frameNumber)
+        public override double GetValueAt(int frameNumber)
         {
 
             float level = SoundEngine.Instance.GetCurrentSample();
             double returnValue;
 
-            if (level > UpperThreshold)
+            double upperThreshold = AnimatableProperties.GetProperty("Upper Threshold").Value;
+            double lowerThreshold = AnimatableProperties.GetProperty("Lower Threshold").Value;
+            double amplitude = AnimatableProperties.GetProperty("Amplitude").Value;
+
+            if (level > upperThreshold)
             {
-                returnValue = Amplitude * maxValue;
-            } else if (level < LowerThreshold)
+                returnValue = amplitude;
+            } else if (level < lowerThreshold)
             {
-                returnValue = minValue;
+                returnValue = 0;
             } else
             {
-                returnValue = Amplitude * (maxValue - minValue) * ((level - LowerThreshold) / (UpperThreshold - LowerThreshold)) + minValue;
+                returnValue = amplitude * ((level - lowerThreshold) / (upperThreshold - lowerThreshold));
             }
 
-            if (returnValue > maxValue)
-                return maxValue;
-            else if (returnValue < minValue)
-                return minValue;
-            else if (double.IsNaN(returnValue))
-                return minValue;
-            else
-                return returnValue;
+            if (double.IsNaN(returnValue))
+                return 0;
+
+            return Math.Min(1, Math.Max(0, returnValue));
 
         }
 

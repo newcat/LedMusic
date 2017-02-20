@@ -17,125 +17,61 @@ namespace LedMusic.Generators
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        private int _centerPosition = 0;
-        [Animatable()]
-        public int CenterPosition
-        {
-            get { return _centerPosition; }
-            set
-            {
-                _centerPosition = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public int CenterPosition_MinValue { get { return 0; } }
-        public int CenterPosition_MaxValue { get { return GlobalProperties.Instance.LedCount - 1; } }
-
-        private double _alpha = 1d;
-        [Animatable(0d, 1d)]
-        public double Alpha
-        {
-            get { return _alpha; }
-            set
-            {
-                _alpha = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double _hue = 0;
-        [Animatable(0d, 360d)]
-        public double Hue
-        {
-            get { return _hue; }
-            set
-            {
-                _hue = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double _saturation = 0;
-        [Animatable(0d, 1d)]
-        public double Saturation
-        {
-            get { return _saturation; }
-            set
-            {
-                _saturation = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double _value = 0;
-        [Animatable(0d, 1d)]
-        public double Value
-        {
-            get { return _value; }
-            set
-            {
-                _value = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private double _glow = 0;
-        [Animatable()]
-        public double Glow
-        {
-            get { return _glow; }
-            set
-            {
-                _glow = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public int Glow_MinValue { get { return 0; } }
-        public int Glow_MaxValue { get { return GlobalProperties.Instance.LedCount; } }
-
-        private bool _isSymmetric = false;
-        [Animatable(0, 1)]
-        public bool IsSymmectric
-        {
-            get { return _isSymmetric; }
-            set
-            {
-                _isSymmetric = value;
-                NotifyPropertyChanged();
-            }
-        }
-
         public string GeneratorName { get { return "Dot"; } }
 
         public ObservableCollection<PropertyModel> AnimatableProperties { get; set; }
-        public ObservableCollection<AnimatedProperty> AnimatedProperties { get; set; }
-        public ObservableCollection<IController> Controllers { get; set; }
-
-        public Guid _id = Guid.NewGuid();
-        public Guid Id { get { return _id; } }
 
         public DotGenerator()
         {
-            AnimatedProperties = new ObservableCollection<AnimatedProperty>();
-            Controllers = new ObservableCollection<IController>();
             AnimatableProperties = new ObservableCollection<PropertyModel>();
+
+            PropertyModel p = new PropertyModel("Center Position", 0, GlobalProperties.Instance.LedCount - 1);
+            p.SetToStringFunc((d) => "LED #" + ((int)d + 1));
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Alpha", 0, 1);
+            p.PercentageValue = 1;
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Hue", 0, 360);
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Saturation", 0, 1);
+            p.PercentageValue = 0.5;
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Value", 0, 1);
+            p.PercentageValue = 1;
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Glow", 0, GlobalProperties.Instance.LedCount);
+            AnimatableProperties.Add(p);
+
+            p = new PropertyModel("Symmetric", 0, 1);
+            p.SetToStringFunc((d) => (int)d == 0 ? "Not symmetric" : "Symmetric");
+            AnimatableProperties.Add(p);
         }
 
         public Color[] getSample(int frame)
         {
 
             int ledCount = GlobalProperties.Instance.LedCount;
+            int centerPosition = (int)AnimatableProperties.GetProperty("Center Position").RenderValue;
+            double alpha = AnimatableProperties.GetProperty("Alpha").RenderValue;
+            double glow = AnimatableProperties.GetProperty("Glow").RenderValue;
+            double hue = AnimatableProperties.GetProperty("Hue").RenderValue;
+            double saturation = AnimatableProperties.GetProperty("Saturation").RenderValue;
+            double value = AnimatableProperties.GetProperty("Value").RenderValue;
 
             ColorHSV[] colors = new ColorHSV[ledCount];
 
-            for (int i = (int)Math.Floor(CenterPosition - Glow); i <= (int)Math.Ceiling(CenterPosition + Glow); i++)
+            for (int i = (int)Math.Floor(centerPosition - glow); i <= (int)Math.Ceiling(centerPosition + glow); i++)
             {
                 if (i >= 0 && i < ledCount)
-                    //(-abs(x - CenterPosition)) / (Glow + 1) + 1
-                    colors[i] = new ColorHSV(Hue, Saturation, Alpha * Math.Max((-Math.Abs(i - CenterPosition)) / (Glow + 1) + 1, 0) * Value);
+                    colors[i] = new ColorHSV(hue, saturation, alpha * Math.Max((-Math.Abs(i - centerPosition)) / (glow + 1) + 1, 0) * value);
             }
 
-            if (IsSymmectric)
+            if ((int)AnimatableProperties.GetProperty("Symmetric").RenderValue == 1)
             {
                 ColorHSV[] reverseColors = new ColorHSV[ledCount];
                 for (int i = 0; i < ledCount; i++)
@@ -151,7 +87,6 @@ namespace LedMusic.Generators
             }
 
             return colors;
-
 
         }
     }

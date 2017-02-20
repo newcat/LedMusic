@@ -8,7 +8,7 @@ using System.Windows.Input;
 namespace LedMusic.Models
 {
     [Serializable()]
-    class Keyframe : IComparable<Keyframe>, IEquatable<Keyframe>, INotifyPropertyChanged
+    public class Keyframe : IComparable<Keyframe>, IEquatable<Keyframe>, INotifyPropertyChanged
     {
 
         [field:NonSerialized]

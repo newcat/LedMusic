@@ -1,9 +1,7 @@
 ﻿using LedMusic.Interfaces;
 using LedMusic.Models;
-using LedMusic.StaticStuff;
 using LedMusic.Viewmodels;
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,12 +20,7 @@ namespace LedMusic
 
         public MainWindow()
         {
-            InitializeComponent();           
-
-            sliderBPM.DataContext = GlobalProperties.Instance;
-            sliderFPS.DataContext = GlobalProperties.Instance;
-            sliderLedCount.DataContext = GlobalProperties.Instance;
-            sliderBeatOffset.DataContext = GlobalProperties.Instance;
+            InitializeComponent();
 
             MainModel.Instance.PropertyChanged += MainModel_PropertyChanged;
 
@@ -97,17 +90,6 @@ namespace LedMusic
         {
             MainModel.Instance.ChangeAnimatableParameter(e.NewValue, ((PropertyModel)(((Slider)sender).DataContext)).Name);
             MainModel.Instance.updatePreviewStrip();
-        }
-
-        private void lvLayers_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-            if (lvLayers.SelectedItem == null)
-                return;
-
-            IAnimatable a = (IAnimatable)(((Layer)lvLayers.SelectedItem).Generator);
-            PropertiesHelper.updateAnimatableProperties(ref a);
-            MainModel.Instance.CurrentAnimatable = a;
         }
 
         private void CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -196,6 +178,21 @@ namespace LedMusic
             {
                 MainModel.Instance.DeleteKeyframes();
             }
+        }
+
+        private void lvLayers_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (lvLayers.SelectedItem == null)
+                return;
+
+            if (lvLayers.SelectedItem is IAnimatable)
+            {
+                MainModel.Instance.CurrentAnimatable = (IAnimatable)lvLayers.SelectedItem;
+            } else if (lvLayers.SelectedItem is Layer)
+            {
+                MainModel.Instance.CurrentAnimatable = (IAnimatable)(((Layer)lvLayers.SelectedItem).Generator);
+            }
+
         }
     }
 }
